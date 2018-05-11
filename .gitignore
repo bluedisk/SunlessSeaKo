@@ -1,3 +1,10 @@
+config.json
+update_json.py
+entities/
+entities_ko/
+output/
+status/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
