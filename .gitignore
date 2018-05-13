@@ -1,4 +1,5 @@
 config.json
+config.py
 update_json.py
 entities/
 entities_ko/

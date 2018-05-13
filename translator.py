@@ -41,7 +41,7 @@ class Translator:
             value = trans[-1].split('//')[0]
         elif self.use_google_trans and len(trans) == 4:
             key = trans[id_col]
-            value = "[G] %s" % trans[-1].split('//')[0]
+            value = "G: %s" % trans[-1].split('//')[0]
         else:
             key = trans[id_col]
             if len(trans) > default_col:
@@ -111,42 +111,11 @@ class Translator:
 
             else:
                 k, v = self.get_best_trans(row, 0)
-                v = v.replace('\\', '')
+                v = v.replace('\\"', '"')
+                v = v.replace('\\r\\n', '\r\n')
+                v = v.replace('"\\', '"')
                 current_table[k] = self.replace_nouns(v)
 
         return events_trans
 
 
-    def recusive_update(self, node, trans_dict):
-        matched = 0
-        unmatched = 0
-
-        if type(node) == dict:
-            if 'Id' in node:
-                node_id = node['Id']
-                trans = trans_dict.get(str(node_id), None)
-                if trans:
-                    matched += 1
-
-                    node['Name'] = trans['Name']
-                    node['Teaser'] = trans['Teaser']
-                    node['Description'] = trans['Description']
-
-                    if not node['Teaser']:
-                        temp_teaset = node['Description'].split('.')[0][:40]
-                        node['Teaser'] = temp_teaset
-                else:
-                    unmatched += 1
-
-            for k, v in node.items():
-                m, u = self.recusive_update(v, trans_dict)
-                matched += m
-                unmatched +=u
-
-        elif type(node) == list:
-            for item in node:
-                m, u = self.recusive_update(item, trans_dict)
-                matched += m
-                unmatched +=u
-
-        return matched, unmatched
