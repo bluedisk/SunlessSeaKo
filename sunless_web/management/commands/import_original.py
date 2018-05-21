@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from sunless_web.modules.sunless import RecursiveProcessor
+from modules.sunless import RecursiveProcessor
 
 from sunless_web.models import EntityFile, Entity
 

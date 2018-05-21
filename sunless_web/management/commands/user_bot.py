@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
-from sunless_web.modules.config import config
+from modules.config import config
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.validators import validate_email

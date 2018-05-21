@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
-from sunless_web.modules.config import config
-from sunless_web.modules.translator import Translator
+from modules.config import config
+from modules.translator import Translator
 
 from sunless_web.models import Entity
 
