@@ -156,6 +156,8 @@ class EntityAdmin(admin.ModelAdmin):
             for field in form.FIELDS:
                 if form.cleaned_data[f'{field}_{trans_type}']:
                     trans[field] = form.cleaned_data[f'{field}_{trans_type}']
+                else:
+                    trans[field] = ''
 
             setattr(obj, trans_type, trans)
 
