@@ -7,7 +7,21 @@ _configs = {
         "force": False,
         "logMode": "telegram",
         "botToken": "",
-        "botGroupId": 0
+        "botGroupId": 0,
+        "papago": {
+            'key': '',
+            'secret': '',
+        },
+        "database":  {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'NAME': '',
+                'USER': '',
+                'PASSWORD': '',
+                'HOST': '',
+                'PORT': '5432',
+            }
+        }
     },
     "dev": {
         "key": "",
@@ -15,7 +29,21 @@ _configs = {
         "force": True,
         "logMode": "print",
         "botToken": "",
-        "botGroupId": 0
+        "botGroupId": 0,
+        "papago": {
+            'key': '',
+            'secret': '',
+        },
+        "database":  {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                'NAME': '',
+                'USER': '',
+                'PASSWORD': '',
+                'HOST': '',
+                'PORT': '5432',
+            }
+        }
     },
 }
 
