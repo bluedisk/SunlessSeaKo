@@ -1,0 +1,16 @@
+/* Styles for the demo */
+
+textarea.form-control {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid black;
+  padding: 10px 0;
+  min-height: 20px;
+  outline: none;
+  resize: none;
+}
+
+textarea.form-control:focus {
+  box-shadow: none;
+}

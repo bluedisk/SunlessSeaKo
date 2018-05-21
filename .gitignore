@@ -5,6 +5,7 @@ entities/
 entities_ko/
 output/
 status/
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
