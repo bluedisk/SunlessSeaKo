@@ -9,6 +9,7 @@ from django.utils.encoding import force_text
 from django_json_widget.widgets import JSONEditorWidget
 from django.contrib.postgres.fields import JSONField
 from django import forms
+from django.forms.widgets import HiddenInput
 from django.db import models
 from django.utils.translation import gettext as _
 
@@ -70,8 +71,16 @@ class EntityForm(forms.ModelForm):
 
         if self.instance:
             for field in self.FIELDS:
+                origin = ''
                 for trans_type in self.TRANS_TYPES:
-                    self.initial[f'{field}_{trans_type}'] = mark_safe(getattr(self.instance, trans_type).get(field, ''))
+                    value = getattr(self.instance, trans_type).get(field, '')
+                    self.initial[f'{field}_{trans_type}'] = mark_safe(value)
+
+                    if trans_type == 'original':
+                        origin = value
+
+                    if not value and (not origin or  (trans_type not in('translate', 'final'))):
+                        self.fields[f'{field}_{trans_type}'].widget = forms.widgets.HiddenInput()
 
     def save(self, commit=True):
         return super(EntityForm, self).save(commit)
