@@ -1,0 +1,180 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load admin_static %}
+{% load admin_urls %}
+
+{% block content %}
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    진행 통계
+                </div>
+                <div class="card-block">
+                    <canvas id="myChart" width="100%" height="100%"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    공지
+                </div>
+                <div class="card-block">
+                    <h4 class="card-title">Sunless Sea 한글화 작업</h4>
+                    <div class="card-img mb-1 mt-1">
+                        <img src="{%  static 'images/main.jpg' %}" class="img-thumbnail" />
+                    </div>
+                    <p class="card-text">안녕하세요~ 씨봇이입니다!<br />
+                        아직 사이트 준비 중이라서 작업 진행 시 손실 될 수 있으니 주의 부탁드립니다!</p>
+                    <p></p>
+                    <a href="{% url 'admin:sunless_web_entity_changelist' %}?amicheck=notyet" class="btn btn-primary btn-block">번역하러 가기!</a>
+                    <a href="https://github.com/bluedisk/SunlessSeaKo" class="btn btn-default btn-block" target="_blank">View on github</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row col-md-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        최신 댓글
+                    </div>
+                    <div class="card-block">
+                        댓글들...
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        {% trans 'Recent actions' %}
+                    </div>
+                    <div class="card-block">
+                        <h4 class="card-title">{% trans 'My actions' %}</h4>
+                    </div>
+                    <div class="card-text" style="overflow: hidden;">
+                        {% load log %}
+                        {% get_admin_log 5 as admin_log for_user user %}
+                        {% if not admin_log %}
+                        <p>{% trans 'None available' %}</p>
+                        {% else %}
+                        <ul class="actionlist">
+                        {% for entry in admin_log %}
+                        <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+                            {% if entry.is_deletion or not entry.get_admin_url %}
+                                {{ entry.object_repr }}
+                            {% else %}
+                                <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                            {% endif %}
+                            <br>
+                            {% if entry.content_type %}
+                                <span class="mini quiet">{% filter capfirst %}{{ entry.content_type }}{% endfilter %}</span>
+                            {% else %}
+                                <span class="mini quiet">{% trans 'Unknown content' %}</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"
+            integrity="sha256-CfcERD4Ov4+lKbWbYqXD6aFM9M51gN4GUEtDhkWABMo="
+            crossorigin="anonymous"></script>
+
+    {% load sunless %}
+    {% get_progress as progress %}
+    <script>
+        var ctx = document.getElementById("myChart").getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ["Nouns", "Events", "Qualities", "Exchanges", "Areas", "Personas"],
+                datasets: [
+                {
+                    label: ' % of Finalized',
+                    data: {{ progress.1 }},
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)',
+                        'rgba(255, 159, 64, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255,99,132,1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                },{
+                    label: ' % of Translated',
+                    data: {{ progress.0 }},
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255,99,132,1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true,
+                            min: 0, // minimum value
+                            max: 100 // maximum value
+                        },
+                        stacked: true
+                    }],
+                    xAxes: [{
+                        stacked: true
+                    }]
+                },
+                onClick: function (c, i) {
+                    var links = [
+                        'sunless_web/noun/',
+                        'sunless_web/entity/?cate__name__exact=events',
+                        'sunless_web/entity/?cate__name__exact=qualities',
+                        'sunless_web/entity/?cate__name__exact=exchanges',
+                        'sunless_web/entity/?cate__name__exact=areas',
+                        'sunless_web/entity/?cate__name__exact=personas'
+                    ];
+
+                    if ( i.length == 0) return;
+                    location.href = links[i[0]._index];
+                }
+            }
+        });
+
+
+    </script>
+{% endblock %}

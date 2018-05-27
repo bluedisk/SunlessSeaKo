@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from modules.sunless import RecursiveProcessor
 
-from sunless_web.models import EntityFile, Entity
+from sunless_web.models import EntityCate, Entity
 
 import re
 import os
@@ -67,7 +67,6 @@ class Command(BaseCommand):
     help = 'Update from dumped json to DB'
 
     def handle(self, *args, **options):
-        letter = re.compile('[^a-zA-Z]')
         flatter = Flatter()
 
         for cate in tqdm(SHEET_VALUE_CATES):
@@ -75,26 +74,24 @@ class Command(BaseCommand):
                 values = json.load(f)
 
             flat_origin = flatter.process(values)
-            ef, _ = EntityFile.objects.get_or_create(filename=cate)
+            ef, _ = EntityCate.objects.get_or_create(name=cate)
 
             for key, entities in tqdm(flat_origin.items(), cate):
                 for entity in entities:
-                    key_string = "%s-%s" % (key, letter.sub('', str(entity['Name'])))
-                    hash_key = sha256(key_string.encode('utf8')).hexdigest()
+                    hash_key = Entity.make_hash(cate, entity['parentName'], key)
 
                     try:
                         Entity.objects.update_or_create(
                             hash=hash_key, defaults={
-                                "file": ef,
+                                "cate": ef,
                                 "key": key,
                                 "parent": entity['parentName'],
                                 "original": entity
                             }
                         )
                     except Exception as e:
-                        print(ef.filename)
+                        print(ef.name)
                         print(key)
-                        print(key_string)
                         print(hash_key)
                         print(json.dumps(entity))
 

@@ -8,7 +8,7 @@ import os
 from tqdm import tqdm
 from pprint import pprint
 
-from sunless_web.models import EntityFile, Entity, Noun, NounCate
+from sunless_web.models import EntityCate, Entity, Noun, NounCate
 
 
 SHEET_DOWNLOAD_PATH = "data/sheets"
@@ -31,7 +31,7 @@ def update_translations(cate, values):
     updated_row = []
     errored_row = []
 
-    ef = EntityFile.objects.get(filename=cate)
+    ef = EntityCate.objects.get(cate)
 
     for key, trans in tqdm(values.items(), cate):
         matched_entities = Entity.objects.filter(file=ef, key=int(key))
@@ -83,16 +83,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--download',
+            '--no-download',
             action='store_true',
-            dest='download',
-            help='Download data from google',
+            dest='no-download',
+            help="Don't Download and Using Saved data",
         )
 
     def handle(self, *args, **options):
         translator = Translator(config['key'], config['sheetId'])
 
-        if options['download']:
+        if not options['no-download']:
             # download noun
             translator.load_noun()
             translator.save_noun(os.path.join(SHEET_DOWNLOAD_PATH, "nouns.json"))
@@ -111,7 +111,7 @@ class Command(BaseCommand):
                 if updated:
                     noun.save()
 
-            #
+            # download sheets
             for cate, sheet_names in SHEETS.items():
                 values = {}
                 print("Downloading for %s" % cate)

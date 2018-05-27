@@ -15,11 +15,13 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.views.generic import RedirectView
 
 from .views import nouns, home
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    url(r'^admin/', RedirectView.as_view(url="/work/")),
+    url(r'^work/', admin.site.urls),
     url(r'^nouns/$', nouns),
     url(r'^$', home)
 ]

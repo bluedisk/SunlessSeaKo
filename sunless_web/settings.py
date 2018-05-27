@@ -35,6 +35,7 @@ INSTALLED_APPS = [
 
     # apps
     'sunless_web',
+    'sunless_web.apps.SunlessConfig',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -127,3 +128,14 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+
+SUIT_CONFIG = {
+    'ADMIN_NAME': 'Sunless Sea 한글화 작업 사이트',
+    'HEADER_DATE_FORMAT': 'Y M d, l',
+    'HEADER_TIME_FORMAT': 'H:i',
+    'MENU_ICONS': {
+        'sunless_web': 'icon-pencil',
+        'auth': 'icon-lock'
+    }
+}

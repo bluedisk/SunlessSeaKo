@@ -1,3 +1,5 @@
+import random
+
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
@@ -7,8 +9,10 @@ from django.contrib.auth.models import Group
 from django.core.validators import validate_email
 
 from telegram import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
-from telegram.ext import Updater
+from telegram.ext import Updater, CommandHandler
 from telegram.ext import MessageHandler, Filters
+
+from sunless_web.models import Conversation
 
 import logging
 import re
@@ -50,12 +54,15 @@ def compare_ex(text, exlist):
     return False
 
 
-class SignupBot:
+class SeaBot:
 
     def __init__(self):
         self.progress = {}
+        self.conversations = []
+        self.reload(None, None)
 
-    def process(self, bot, update):
+    # Signing
+    def signing(self, bot, update):
         # print("msg from ", update.message.from_user.username, " ", update.message.text)
 
         user = update.message.from_user.username
@@ -88,8 +95,10 @@ class SignupBot:
             user.groups.add(Group.objects.get(name='Translator'))
             user.save()
 
+            print("User ", user.username, "has created")
+
             bot.send_message(chat_id=update.message.chat_id,
-                             text="계정 생성이 완료 되었습니다! \r\nhttp://sunless.eggpang.net/admin 에서 로그인해주세요!")
+                             text="계정 생성이 완료 되었습니다! \r\nhttp://sunless.eggpang.net/work 에서 로그인해주세요!")
             progress['phase'] = self.hello
         else:
             progress['phase'] = next_phase
@@ -100,7 +109,7 @@ class SignupBot:
             return f"""안녕하세요 {progress['username']}님! 다시 봬니 반갑습니다!
 {progress['username']}님은 이미 계정을 갖고 계시니 제가 도와드릴건 없지만 
 나중에 제가 더 많은 일을 할 수 있게 되면 도움이 되드리겠습니다! 
-참고로 번역 사이트 주소는 http://sunless.eggpang.net/admin 입니다!
+참고로 번역 사이트 주소는 http://sunless.eggpang.net/work 입니다!
 """, self.hello
         else:
             return "안녕하세요? Sunless Sea 번역 사이트 계정을 만드실 건가요?", self.hello_yn
@@ -142,23 +151,60 @@ class SignupBot:
 
         return f"오키! {progress['username']} 계정 생성을 시작합니다!", None
 
+    #
+    # chatting
+    #
+    def reload(self, bot, update):
+        print("Reloading....")
+        if update:
+            bot.send_message(chat_id=update.message.chat_id, text="대화 목록 업데이트 중...")
+        self.conversations = list(Conversation.objects.prefetch_related("answers").all())
+        if update:
+            bot.send_message(chat_id=update.message.chat_id, text="업데이트 완료! 총 %d개 로딩" % len(self.conversations))
+
+    def chat(self, bot, update):
+        for convers in self.conversations:
+            res = convers.findall(update.message.text)
+            if res and random.random() <= convers.chance:
+                answer = random.choice(convers.answers.all())
+                bot.send_message(chat_id=update.message.chat_id, text=answer.answer)
+
+    #
+    # commands
+    #
+    def leave_chat(self, bot, update):
+        bot.send_message(chat_id=update.message.chat_id, text="네... 아흑...")
+        bot.leave_chat(update.message.chat_id)
+
+    def say(self, bot, update):
+        bot.send_message(chat_id=update.message.chat_id, text=update.message.text[4:])
+
 
 class Command(BaseCommand):
 
     def __init__(self):
         super(Command, self).__init__(self)
-        self.updater = None
-        self.dispatcher = None
-        self.signup_bot = SignupBot()
 
     def handle(self, *args, **options):
-        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+        seabot = SeaBot()
 
-        self.updater = Updater(token=config['botToken'])
-        self.dispatcher = self.updater.dispatcher
+        updater = Updater(token=config['botToken'])
+        dispatcher = updater.dispatcher
 
-        process_handler = MessageHandler(Filters.text & Filters.private, self.signup_bot.process)
-        self.dispatcher.add_handler(process_handler)
+        process_handler = MessageHandler(Filters.text & Filters.private, seabot.signing)
+        dispatcher.add_handler(process_handler)
+
+        helper_handler = MessageHandler(Filters.text & Filters.group, seabot.chat)
+        dispatcher.add_handler(helper_handler)
+
+        leave_handler = CommandHandler('나가이씨봇아', seabot.leave_chat)
+        dispatcher.add_handler(leave_handler)
+
+        say_handler = CommandHandler('따라해', seabot.say)
+        dispatcher.add_handler(say_handler)
+
+        say_handler = CommandHandler('reload', seabot.reload)
+        dispatcher.add_handler(say_handler)
 
         print("Bot is Ready!")
-        self.updater.start_polling()
+        updater.start_polling()

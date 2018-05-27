@@ -1,0 +1,22 @@
+{
+  "name": "jquery-mentions",
+  "version": "1.0.5",
+  "homepage": "https://github.com/ivirabyan/jquery-mentions",
+  "authors": [
+    "Ivan Virabyan"
+  ],
+  "description": "Adds mentioning support to your text fields",
+  "main": [
+    "jquery.mentions.js",
+    "jquery.mentions.css"
+  ],
+  "keywords": [
+    "jquery",
+    "jquery-mentions",
+    "mentions"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "jquery-ui": "~1.11.3"
+  }
+}
