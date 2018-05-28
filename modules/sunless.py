@@ -1,3 +1,12 @@
+import hashlib
+import re
+import sys
+from pprint import pprint
+
+import hgtk
+
+from sunless_web.models import Entity
+
 EXCLUDE_OBJECTS = (
     # events
     'LinkToEvent', 'Deck', 'LimitedToArea', 
@@ -19,7 +28,7 @@ class RecursiveProcessor:
         self.processed = 0
         self.notprocessed = 0
         
-    def process(self, root):
+    def process(self, root, *args, **kwargs):
         self.processed = 0
         self.notprocessed = 0
         
@@ -27,17 +36,17 @@ class RecursiveProcessor:
         
         return self.processed, self.notprocessed
     
-    def _process_node(self, node, parentName):
+    def _process_node(self, node, parent):
         return False
 
-    def _recusive_process(self, node, parentName):
+    def _recusive_process(self, node, parent):
         if type(node) == dict:
             if node.get('Id', None) and (
                     (node.get('Name', None) and node['Name'].strip()) or
                     (node.get('Teaser', None) and node['Teaser'].strip()) or
                     (node.get('Description', None) and node['Description'].strip())
             ):
-                if self._process_node(node, parentName):
+                if self._process_node(node, parent):
                     self.processed += 1
                 else:
                     self.notprocessed += 1
@@ -48,7 +57,7 @@ class RecursiveProcessor:
 
         elif type(node) == list:
             for item in node:
-                self._recusive_process(item, parentName)
+                self._recusive_process(item, parent)
 
 
 class RecursiveUpdateProcessor(RecursiveProcessor):
@@ -56,34 +65,63 @@ class RecursiveUpdateProcessor(RecursiveProcessor):
     def __init__(self):
         super(RecursiveUpdateProcessor, self).__init__()
         self.trans_dict = {}
+        self.nouns_dict = {}
+        self.cate = ''
+        self.noun_format = re.compile('(.*?)@\[.+?\]\(.+?:(.+?)\)(.*?)')
+        self.left_word = re.compile(r"[\w']+")
 
-    def process(self, root, trans_dict):
+    def get_best_trans(self, trans, field):
+        if trans['final'].get(field, None):
+            best = trans['final'][field]
+        elif trans['translate'].get(field, None):
+            best = trans['translate'][field]
+        elif trans['papago'].get(field, None):
+            best = "P: " + trans['papago'][field]
+        elif trans['google'].get(field, None):
+            best = "G: " + trans['google'][field]
+        else:
+            best = trans['original'][field]
+
+        def make_noun_text(x):
+            pre, id, post = x
+            lefted_first = self.left_word.findall(post)
+            josa_type = hgtk.josa.get_josa_type(lefted_first[0])
+
+            word = self.nouns_dict[id]
+
+            if josa_type:
+                nexts = " ".join(lefted_first[1:])
+                word = hgtk.josa.attach(word, josa_type)
+                return post + word + nexts
+            else:
+                return post + word + post
+
+        return self.noun_format.sub(make_noun_text, best)
+
+    def process(self, cate, root, trans_dict, nouns_dict, *args, **kwargs):
+        self.cate = cate
         self.trans_dict = trans_dict
-        return super(RecursiveUpdateProcessor, self).process(root)
+        self.nouns_dict = nouns_dict
+        return super(RecursiveUpdateProcessor, self).process(root, *args, **kwargs)
 
-    def _process_node(self, node, parentName):
-        node_id = node['Id']
-        trans = self.trans_dict.get(str(node_id), None)
+    def _process_node(self, node, parent):
+        key = Entity.make_hash(self.cate, parent, node['Id'])
+        trans = self.trans_dict.get(key, None)
         if not trans:
+            print("Not matched hash", key, self.cate, parent, node['Id'])
             return False
 
-        node['Name'] = trans['Name']
-        node['Teaser'] = trans['Teaser']
-        node['Description'] = trans['Description']
+        for field in ['Name', 'Teaser']:
+            if trans['original'].get(field, None):
+                node[field] = self.get_best_trans(trans, field)
 
-        if not node['Teaser']:
-            temp_teaset = node['Description'].split('.')[0][:40]
-            node['Teaser'] = temp_teaset
+        for field in ['Description']:
+            if trans['original'].get(field, None):
+                node[field] = "\r\n" + self.get_best_trans(trans, field)
+
+        if 'Teaser' in node and not trans.get('Teaser', None) and trans.get('Description', None):
+            teaser_filler = trans['Description'].split('.')[0][:30]
+            node['Teaser'] = teaser_filler
 
         return True
 
-
-def diff_tree(old_dict, new_dict):
-    changed_count = 0
-    
-    for k, v in new_dict.items():
-        value = old_dict.get(k, None)
-        if not value or value != v:
-            changed_count += 1
-
-    return changed_count

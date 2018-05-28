@@ -1,11 +1,11 @@
-from django.contrib import admin
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
-from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.cache import cache_page
 
-from .models import Noun
+from .models import Noun, Patch
 
 
+@cache_page(60 * 5)
 def nouns(requests):
     result = []
 
@@ -19,4 +19,12 @@ def nouns(requests):
 
 
 def home(request):
-    return render(request, "home.html")
+    return render(request, "home.html", {"patch": Patch.objects.order_by('-created_at').first()})
+
+
+def download(request, patch_id):
+    patch = Patch.objects.get(pk=patch_id)
+    patch.download += 1
+    patch.save()
+
+    return HttpResponseRedirect(patch.file.url)

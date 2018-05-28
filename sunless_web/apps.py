@@ -16,6 +16,7 @@ class SunlessConfig(DjangoSuitConfig):
         ], icon='fa fa-users'),
         ParentItem('씨봇이 관리', children=[
             ChildItem(model='sunless_web.conversation'),
+            ChildItem(model='sunless_web.patch'),
         ], icon='fa fa-telegram'),
     )
 

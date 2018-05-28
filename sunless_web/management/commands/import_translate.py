@@ -5,12 +5,10 @@ from modules.sunless import RecursiveProcessor
 
 from sunless_web.models import EntityCate, Entity
 
-import re
 import os
 import json
 import hgtk
 
-from hashlib import sha256
 from tqdm import tqdm
 
 

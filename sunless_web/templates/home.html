@@ -11,11 +11,21 @@ Sunless Sea 한글화
 <body>
 <div class=" text-center">
     <h2 class="mt-5 mb-3">Sunless Sea 한글화 작업 사이트</h2>
-    <img src="{% static '/images/main.jpg' %}" class="rounded d-block mx-auto" alt="씨봇이" style="width:300px;"/>
+    <img src="{% static '/images/main.jpg' %}" class="rounded d-block mx-auto m-5" alt="씨봇이" style="width:300px;"/>
 
-    <a href="/work" class="btn btn-info m-3"><i class="fas fa-ship"></i> 번역 작업하러 가기 </a>
+    <a href="/work" class="btn btn-info"><i class="fas fa-ship"></i> 번역 작업하러 가기 </a>
 
-    <h3>번역 작업 안내</h3>
+    <hr class="m-5" />
+
+    <h3 class="m-3">한글패치 다운로드</h3>
+    {{ patch.created_at|date }} Ver. <br /><br />
+    초벌번역 {{ patch.get_trans_percent }}%<br />
+    최종번역 {{ patch.get_final_percent }}%<br />
+    <a href="{% url 'download' patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
+
+    <hr class="m-5" />
+
+    <h3 class="m-3">번역 작업 안내</h3>
     <iframe style="border: 1px solid black" src="https://docs.google.com/document/d/e/2PACX-1vTw3ySXjIJcWwOrrAMFPgws5jjKyF8SO7vKKlFSWfSAjTWdBGPdo3wvm1SjT8NwC_n_aPQWXr8Ss4xC/pub?embedded=true" frameborder="0" id="iframe" width="600px"></iframe>
 
 

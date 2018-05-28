@@ -12,8 +12,9 @@ from django import forms
 from django.db import models
 from django.utils.translation import gettext as _
 
+from urllib.parse import parse_qsl
 
-from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer
+from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch
 from mentions.widgets import ElasticTextarea, TranslateTextarea
 
 TRANS_HELP = None
@@ -27,7 +28,7 @@ admin.site.index_template = 'admin/statistics.html'
 class EntityForm(forms.ModelForm):
     class Meta:
         model = Entity
-        exclude = ('create_at', 'update_at', 'cate', 'key', 'hash', 'parent')
+        exclude = ('created_at', 'updated_at', 'cate', 'key', 'hash', 'parent')
 
     TRANS_TYPES = (
         'original',
@@ -49,24 +50,24 @@ class EntityForm(forms.ModelForm):
         "extraPlugins": 'autogrow'
     }
 
-    Name_original = forms.CharField(label='원문', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
+    Name_original = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
-    Name_papago = forms.CharField(label='파파고', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
-    Name_google = forms.CharField(label='구글', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
+    Name_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
+    Name_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
 
-    Teaser_original = forms.CharField(label='원문', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Teaser_original = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Teaser_papago = forms.CharField(label='파파고', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Teaser_google = forms.CharField(label='구글', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Teaser_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Teaser_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
 
-    Description_original = forms.CharField(label='원문', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Description_original = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Description_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Description_papago = forms.CharField(label='파파고', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Description_google = forms.CharField(label='구글', disabled=True, help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Description_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Description_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Description_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Description_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
 
@@ -75,13 +76,17 @@ class EntityForm(forms.ModelForm):
 
         if self.instance:
             for trans_type in self.TRANS_TYPES:
-                trans = getattr(self.instance, trans_type)
+                if trans_type == 'original':
+                    trans = getattr(self.instance, 'marked')
+                else:
+                    trans = getattr(self.instance, trans_type)
+
                 if not trans:
                     continue
 
                 for field in self.FIELDS:
-                        value = trans.get(field, '')
-                        self.initial[f'{field}_{trans_type}'] = mark_safe(value)
+                    value = trans.get(field, '')
+                    self.initial[f'{field}_{trans_type}'] = mark_safe(value)
 
     def save(self, commit=True):
         return super(EntityForm, self).save(commit)
@@ -104,6 +109,11 @@ class CheckerFilter(SimpleListFilter):
             return queryset.exclude(id__in=request.user.entities.all())
 
 
+class MyRequest:
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+
 @admin.register(Entity)
 class EntityAdmin(admin.ModelAdmin):
 
@@ -120,10 +130,10 @@ class EntityAdmin(admin.ModelAdmin):
 
     form = EntityForm
 
-    readonly_fields = ('cate', 'key', 'parent', 'hash','checker_list')
+    readonly_fields = ('cate', 'key', 'parent', 'hash', 'checker_list')
     search_fields = ['key', 'hash', 'original', 'google', 'papago', 'translate', 'final']
     list_display_links = ['path', 'summary']
-    list_filter = [CheckerFilter, 'translated', 'cate', 'parent']
+    list_filter = [CheckerFilter, 'status', 'cate', 'parent']
     formfield_overrides = {
         JSONField: {'widget': JSONEditorWidget},
     }
@@ -198,14 +208,14 @@ class EntityAdmin(admin.ModelAdmin):
         am_i_checked_it.short_description = '내가 체크했나?'
 
         if request.user.is_superuser:
-            return ['path', 'summary', am_i_checked_it, 'checker_count', 'update_at']
+            return ['path', 'summary', am_i_checked_it, 'checker_count', 'updated_at']
         else:
-            return ['path', 'summary', am_i_checked_it, 'update_at']
+            return ['path', 'summary', am_i_checked_it, 'updated_at']
 
     def save_model(self, request, obj, form, change):
         obj.checker.add(request.user)
 
-        for trans_type in form.TRANS_TYPES:
+        for trans_type in ['reference', 'translate', 'final']:
             trans = {}
 
             for field in form.FIELDS:
@@ -227,7 +237,14 @@ class EntityAdmin(admin.ModelAdmin):
             msg = (_('The %(name)s "%(obj)s" was changed successfully.') %
                    {'name': force_text(opts.verbose_name),
                     'obj': force_text(obj)})
-            next_obj = obj.__class__.objects.filter(id__lt=obj.id).order_by('id')[:1]
+
+            filters = dict(parse_qsl(request.GET.get('_changelist_filters')))
+            setattr(request, "GET", filters)
+            next_obj = self.get_changelist_instance(request)
+            next_obj = next_obj.get_queryset(request)
+            next_obj = next_obj.filter(id__lt=obj.id)
+
+            next_obj = next_obj.order_by('id')[:1]
             if next_obj:
                 self.message_user(request, msg)
                 return HttpResponseRedirect(
@@ -239,7 +256,13 @@ class EntityAdmin(admin.ModelAdmin):
             msg = (_('The %(name)s "%(obj)s" was changed successfully.') %
                    {'name': force_text(opts.verbose_name),
                     'obj': force_text(obj)})
-            next_obj = obj.__class__.objects.filter(id__gt=obj.id).order_by('id')[:1]
+
+            filters = dict(parse_qsl(request.GET.get('_changelist_filters')))
+            setattr(request, "GET", filters)
+            next_obj = self.get_changelist_instance(request).get_queryset(request)
+            next_obj = next_obj.filter(id__gt=obj.id)
+
+            next_obj = next_obj.order_by('id')[:1]
             if next_obj:
                 self.message_user(request, msg)
                 return HttpResponseRedirect(
@@ -281,6 +304,8 @@ class NounAdmin(admin.ModelAdmin):
     list_display_links = ['name']
     list_editable = ['reference', 'google', 'papago', 'translate', 'final']
 
+    search_fields = ['name', 'papago', 'translate', 'final']
+
     formfield_overrides = {
         models.TextField: {'widget': ElasticTextarea()},
     }
@@ -296,3 +321,8 @@ class AnswerInline(admin.TabularInline):
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
     inlines = (AnswerInline, )
+
+
+@admin.register(Patch)
+class PatchAdmin(admin.ModelAdmin):
+    list_display = ['created_at', 'file', 'download']

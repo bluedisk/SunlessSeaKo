@@ -167,6 +167,7 @@ class SeaBot:
             res = convers.findall(update.message.text)
             if res and random.random() <= convers.chance:
                 answer = random.choice(convers.answers.all())
+                print("Answer for ", update.message.text, "as", answer, "in", update.message.chat_id)
                 bot.send_message(chat_id=update.message.chat_id, text=answer.answer)
 
     #

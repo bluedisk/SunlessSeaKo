@@ -74,29 +74,48 @@ class Entity(models.Model):
     final = JSONField('Final Text(JSON)', default={})
 
     checker = models.ManyToManyField(get_user_model(), related_name="entities")
-    translated = models.BooleanField('변역 완료 여부', default=False)
+
+    translated = models.IntegerField('변역 완료 숫자', default=0)
+    finalized = models.IntegerField('변역 확정 숫자', default=0)
+    items = models.IntegerField('변역 항목 숫자', default=0)
+
+    TRANSLATE_STATUS = (
+        ('none', '안됨'),
+        ('in', '진행 중'),
+        ('done', '완료')
+    )
+    status = models.CharField('번역 상태', max_length=4, choices=TRANSLATE_STATUS, default='none')
     error = models.TextField('error', null=True)
 
-    create_at = models.DateTimeField('생성일', auto_now_add=True)
-    update_at = models.DateTimeField('수정일', auto_now=True)
+    created_at = models.DateTimeField('생성일', auto_now_add=True)
+    updated_at = models.DateTimeField('수정일', auto_now=True)
 
     def check_translated(self):
-        if self.original.get('Name', None) and (
-                not self.final.get('Name', None) and not self.translate.get('Name', None)):
-            return False
-        if self.original.get('Teaser', None) and (
-                not self.final.get('Teaser', None) and not self.translate.get('Teaser', None)):
-            return False
-        if self.original.get('Description', None) and (
-                not self.final.get('Description', None) and not self.translate.get('Description', None)):
-            return False
+        items = 0
+        transed = 0
+        finaled = 0
 
-        return True
+        for field in ('Name', 'Teaser', "Description"):
+            if self.original.get(field, None):
+                items += 1
+                if self.final.get(field, None):
+                    transed += 1
+                if self.translate.get(field, None):
+                    finaled += 1
+
+        return items, transed, finaled
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
 
-        self.translated = self.check_translated()
+        self.items, self.translated, self.finalized = self.check_translated()
+        if not self.translated and not self.finalized:
+            self.status = 'none'
+        elif self.finalized == self.items:
+            self.status = 'done'
+        else:
+            self.status = 'in'
+
         super(Entity, self).save(force_insert, force_update, using, update_fields)
 
 
@@ -130,6 +149,9 @@ class Noun(models.Model):
     papago = models.CharField('파파고', max_length=100, null=True, blank=True, default='')
     translate = models.CharField('번역', max_length=100, null=True, blank=True, default='')
     final = models.CharField('최종본', max_length=100, null=True, blank=True, default='')
+
+    created_at = models.DateTimeField('생성일', auto_now_add=True)
+    updated_at = models.DateTimeField('수정일', auto_now=True)
 
 
 class Conversation(models.Model):
@@ -172,3 +194,30 @@ class Answer(models.Model):
                                related_name="answers",
                                on_delete=models.CASCADE)
 
+
+class Patch(models.Model):
+    class Meta:
+        verbose_name = "패치"
+        verbose_name_plural = "패치 목록"
+
+    def __str__(self):
+        return str(self.created_at)
+
+    def get_absolute_url(self):
+        return self.file.url
+
+    def get_trans_percent(self):
+        return f'{self.translated * 100 / self.items:.2f}'
+
+    def get_final_percent(self):
+        return f'{self.finalized * 100 / self.items:.2f}'
+
+    file = models.FileField('패치파일')
+
+    translated = models.IntegerField('변역 완료 숫자', default=0)
+    finalized = models.IntegerField('변역 확정 숫자', default=0)
+    items = models.IntegerField('변역 항목 숫자', default=0)
+
+    download = models.IntegerField('다운로드 수', default=0)
+
+    created_at = models.DateTimeField('생성일', auto_now_add=True)

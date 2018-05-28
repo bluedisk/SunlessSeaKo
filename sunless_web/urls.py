@@ -15,13 +15,15 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.urls import path
 from django.views.generic import RedirectView
 
-from .views import nouns, home
+from .views import nouns, home, download
 
 urlpatterns = [
-    url(r'^admin/', RedirectView.as_view(url="/work/")),
-    url(r'^work/', admin.site.urls),
-    url(r'^nouns/$', nouns),
-    url(r'^$', home)
+    path('admin/', RedirectView.as_view(url="/work/")),
+    path('work/', admin.site.urls),
+    path('nouns/', nouns),
+    path('download/<int:patch_id>/', download, name='download'),
+    path('', home)
 ]

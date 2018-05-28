@@ -1,7 +1,11 @@
-from django import template
-from django.db.models import Count, Q
+import json
 
-from sunless_web.models import Entity, EntityCate, Noun
+from django import template
+from django.db.models import Count, Q, Sum
+from django.contrib.auth import get_user_model
+from django.utils.safestring import mark_safe
+
+from sunless_web.models import Entity, Noun #, EntityCate
 
 register = template.Library()
 
@@ -18,22 +22,35 @@ def get_progress():
 
     order = ("nouns", "events", "qualities", "exchanges", "areas", "personas")
 
-    for count in Entity.objects.all().values('cate').annotate(cnt=Count('cate')):
+    for count in Entity.objects.all().values('cate').annotate(cnt=Sum('items')):
         idx = order.index(count['cate'])
         total[idx] = count['cnt']
 
-    for count in Entity.objects.filter(translated=True).values('cate').annotate(cnt=Count('cate')):
+    for count in Entity.objects.all().values('cate').annotate(cnt=Sum('translated')):
         idx = order.index(count['cate'])
         transed[idx] = count['cnt']
 
-    for count in Entity.objects.filter(final=True).values('cate').annotate(cnt=Count('cate')):
+    for count in Entity.objects.all().values('cate').annotate(cnt=Sum('finalized')):
         idx = order.index(count['cate'])
         finaled[idx] = count['cnt']
 
     percentage_trans = []
     percentage_final = []
     for idx, (total, final, transed)in enumerate(zip(total, finaled, transed)):
+        total = total or 1
+
         percentage_trans.append(round((transed-final)*100/total, 1))
         percentage_final.append(round(final*100/total, 1))
 
     return percentage_trans, percentage_final
+
+
+@register.simple_tag
+def get_ranking():
+    ranker = get_user_model().objects.all().annotate(works=Count('entities')).order_by('-works')[:10]
+    keys, values = zip(*[("%s위 %s" % (rank+1, u.username), u.works) for rank, u in enumerate(ranker)])
+
+    return {
+        "k": mark_safe(json.dumps(keys)),
+        "v": json.dumps(values)
+    }
