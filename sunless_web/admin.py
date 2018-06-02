@@ -31,7 +31,7 @@ class EntityForm(forms.ModelForm):
         exclude = ('created_at', 'updated_at', 'cate', 'key', 'hash', 'parent')
 
     TRANS_TYPES = (
-        'original',
+        'marked',
         'reference',
         'papago',
         'google',
@@ -50,21 +50,21 @@ class EntityForm(forms.ModelForm):
         "extraPlugins": 'autogrow'
     }
 
-    Name_original = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
+    Name_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
 
-    Teaser_original = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Teaser_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
 
-    Description_original = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Description_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Description_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Description_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Description_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
@@ -76,17 +76,15 @@ class EntityForm(forms.ModelForm):
 
         if self.instance:
             for trans_type in self.TRANS_TYPES:
-                if trans_type == 'original':
-                    trans = getattr(self.instance, 'marked')
-                else:
-                    trans = getattr(self.instance, trans_type)
+                trans = getattr(self.instance, trans_type)
 
                 if not trans:
                     continue
 
                 for field in self.FIELDS:
-                    value = trans.get(field, '')
-                    self.initial[f'{field}_{trans_type}'] = mark_safe(value)
+                    if field in trans:
+                        value = Noun.nid_to_mention(trans[field])
+                        self.initial[f'{field}_{trans_type}'] = mark_safe(value)
 
     def save(self, commit=True):
         return super(EntityForm, self).save(commit)
@@ -130,7 +128,6 @@ class EntityAdmin(admin.ModelAdmin):
 
     form = EntityForm
 
-    readonly_fields = ('cate', 'key', 'parent', 'hash', 'checker_list')
     search_fields = ['key', 'hash', 'original', 'google', 'papago', 'translate', 'final']
     list_display_links = ['path', 'summary']
     list_filter = [CheckerFilter, 'status', 'cate', 'parent']
@@ -155,7 +152,7 @@ class EntityAdmin(admin.ModelAdmin):
 
             row = ('Name', {
                 'description': '고유명사를 추가하시려면 @를 누르고 타이핑해주세요',
-                'fields': ['Name_original',
+                'fields': ['Name_marked',
                            autolist,
                            ('Name_translate', 'Name_final'),
                            'Name_reference']
@@ -173,7 +170,7 @@ class EntityAdmin(admin.ModelAdmin):
 
             fieldsets.append(('Teaser', {
                 'description': '고유명사를 추가하시려면 @를 누르고 타이핑해주세요',
-                'fields': ['Teaser_original'] + autolist +
+                'fields': ['Teaser_marked'] + autolist +
                           ['Teaser_translate', 'Teaser_final', 'Teaser_reference']
             }))
 
@@ -187,7 +184,7 @@ class EntityAdmin(admin.ModelAdmin):
 
             fieldsets.append(('Description', {
                 'description': '고유명사를 추가하시려면 @를 누르고 타이핑해주세요',
-                'fields': ['Description_original'] + autolist +
+                'fields': ['Description_marked'] + autolist +
                           ['Description_translate', 'Description_final', 'Description_reference']
             }))
 
@@ -195,6 +192,23 @@ class EntityAdmin(admin.ModelAdmin):
             fieldsets.append(('Debug', {'fields': ['original', 'checker_list']}))
 
         return fieldsets
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = ['cate', 'key', 'parent', 'hash', 'checker_list']
+        #
+        # if not obj:
+        #     return readonly
+        #
+        # for field in EntityForm.FIELDS:
+        #     if obj.original[field]:
+        #         readonly.append(f'{field}_marked')
+        #         if obj.papago.get(field, None):
+        #             readonly.append(f'{field}_papago')
+        #
+        #         if obj.google.get(field, None):
+        #             readonly.append(f'{field}_google')
+
+        return readonly
 
     def get_list_display(self, request):
         def am_i_checked_it(obj):
@@ -208,19 +222,21 @@ class EntityAdmin(admin.ModelAdmin):
         am_i_checked_it.short_description = '내가 체크했나?'
 
         if request.user.is_superuser:
-            return ['path', 'summary', am_i_checked_it, 'checker_count', 'updated_at']
+            return ['path', 'summary', am_i_checked_it, 'status_html', 'checker_count', 'updated_at']
         else:
-            return ['path', 'summary', am_i_checked_it, 'updated_at']
+            return ['path', 'summary', am_i_checked_it, 'status_html', 'updated_at']
 
     def save_model(self, request, obj, form, change):
         obj.checker.add(request.user)
 
-        for trans_type in ['reference', 'translate', 'final']:
+        for trans_type in ['papago', 'google', 'marked', 'reference', 'translate', 'final']:
             trans = {}
 
             for field in form.FIELDS:
-                if form.cleaned_data[f'{field}_{trans_type}']:
-                    trans[field] = form.cleaned_data[f'{field}_{trans_type}']
+                data = form.cleaned_data[f'{field}_{trans_type}']
+
+                if data:
+                    trans[field] = Noun.mention_to_nid(data)
                 else:
                     trans[field] = ''
 
@@ -238,18 +254,20 @@ class EntityAdmin(admin.ModelAdmin):
                    {'name': force_text(opts.verbose_name),
                     'obj': force_text(obj)})
 
-            filters = dict(parse_qsl(request.GET.get('_changelist_filters')))
+            preserved_filter = request.GET.get('_changelist_filters')
+            filters = dict(parse_qsl(preserved_filter))
             setattr(request, "GET", filters)
             next_obj = self.get_changelist_instance(request)
             next_obj = next_obj.get_queryset(request)
-            next_obj = next_obj.filter(id__lt=obj.id)
+            next_obj = next_obj.filter(id__lt=obj.id).first()
 
-            next_obj = next_obj.order_by('id')[:1]
+#            next_obj = next_obj.order_by('id')[:1]
             if next_obj:
                 self.message_user(request, msg)
+                setattr(request, "GET", {'_changelist_filters': preserved_filter})
                 return HttpResponseRedirect(
                     reverse('admin:{}_{}_change'.format(obj._meta.app_label, obj._meta.model_name),
-                            args=(next_obj[0].pk,)),
+                            args=(next_obj.pk,)) + "?" + self.get_preserved_filters(request),
                 )
         elif "_viewprev" in request.POST:
             opts = self.model._meta
@@ -257,17 +275,19 @@ class EntityAdmin(admin.ModelAdmin):
                    {'name': force_text(opts.verbose_name),
                     'obj': force_text(obj)})
 
-            filters = dict(parse_qsl(request.GET.get('_changelist_filters')))
+            preserved_filter = request.GET.get('_changelist_filters')
+            filters = dict(parse_qsl(preserved_filter))
             setattr(request, "GET", filters)
             next_obj = self.get_changelist_instance(request).get_queryset(request)
-            next_obj = next_obj.filter(id__gt=obj.id)
+            next_obj = next_obj.filter(id__gt=obj.id).first()
 
-            next_obj = next_obj.order_by('id')[:1]
+#            next_obj = next_obj.order_by('id')[:1]
             if next_obj:
                 self.message_user(request, msg)
+                setattr(request, "GET", {'_changelist_filters': preserved_filter})
                 return HttpResponseRedirect(
                     reverse('admin:{}_{}_change'.format(obj._meta.app_label, obj._meta.model_name),
-                            args=(next_obj[0].pk,)),
+                            args=(next_obj.pk,)) + "?" + self.get_preserved_filters(request),
                 )
 
         return super(EntityAdmin, self).response_change(request, obj)

@@ -67,7 +67,7 @@ class RecursiveUpdateProcessor(RecursiveProcessor):
         self.trans_dict = {}
         self.nouns_dict = {}
         self.cate = ''
-        self.noun_format = re.compile('(.*?)@\[.+?\]\(.+?:(.+?)\)(.*?)')
+        self.noun_format = re.compile('(.*?)\!N(\d{4})\!(.*?)')
         self.left_word = re.compile(r"[\w']+")
 
     def get_best_trans(self, trans, field):
@@ -83,18 +83,22 @@ class RecursiveUpdateProcessor(RecursiveProcessor):
             best = trans['original'][field]
 
         def make_noun_text(x):
-            pre, id, post = x
+            pre, id, post = x.groups()
             lefted_first = self.left_word.findall(post)
-            josa_type = hgtk.josa.get_josa_type(lefted_first[0])
 
-            word = self.nouns_dict[id]
+            if lefted_first:
+                josa_type = hgtk.josa.get_josa_type(lefted_first[0])
+            else:
+                josa_type = None
+
+            word = self.nouns_dict[int(id)][1]
 
             if josa_type:
                 nexts = " ".join(lefted_first[1:])
                 word = hgtk.josa.attach(word, josa_type)
-                return post + word + nexts
+                return pre + word + nexts
             else:
-                return post + word + post
+                return pre + word + post
 
         return self.noun_format.sub(make_noun_text, best)
 

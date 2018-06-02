@@ -4,8 +4,12 @@ import random
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
+from django.db.models.functions import Length
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+
+from django.core.cache import cache
+from modules.papago import papago
 
 import re
 
@@ -75,7 +79,7 @@ class Entity(models.Model):
 
     checker = models.ManyToManyField(get_user_model(), related_name="entities")
 
-    translated = models.IntegerField('변역 완료 숫자', default=0)
+    translated = models.IntegerField('초벌 번역 숫자', default=0)
     finalized = models.IntegerField('변역 확정 숫자', default=0)
     items = models.IntegerField('변역 항목 숫자', default=0)
 
@@ -89,6 +93,16 @@ class Entity(models.Model):
 
     created_at = models.DateTimeField('생성일', auto_now_add=True)
     updated_at = models.DateTimeField('수정일', auto_now=True)
+
+    STATUS_HTML = {
+        'none': '<span style="color:#a08080;"><i class="far fa-times-circle"></i> 안됨</span>',
+        'in': '<span style="color:#8080a0;"><i class="far fa-edit"></i> 진행</span>',
+        'done': '<span style="color:#80a080;"><i class="far fa-check-circle"></i> 완료</span>'
+    }
+
+    def status_html(self):
+        return mark_safe(self.STATUS_HTML.get(self.status, 'Error!'))
+    status_html.short_description = '번역상태'
 
     def check_translated(self):
         items = 0
@@ -131,10 +145,21 @@ class NounCate(models.Model):
     icon = models.CharField('아이콘 클래스', max_length=50, default='fas fa-book')
 
 
+def make_function_with_group(nouns, f):
+    def nid_function(g):
+        nid = int(g.groups()[0])
+        return f(nid, nouns[nid] if nouns else None)
+
+    return nid_function
+
+
 class Noun(models.Model):
     class Meta:
         verbose_name = '명사'
         verbose_name_plural = '명사 사전'
+
+    mention_ex = re.compile(r'@\[.+?\]\((\d{4})\)')
+    noun_ex = re.compile(r'\!N(\d{4})\!')
 
     def __str__(self):
         return str(self.name)
@@ -142,8 +167,54 @@ class Noun(models.Model):
     def get_absolute_url(self):
         return reverse('admin:{}_{}_change'.format(self._meta.app_label, self._meta.model_name), args=(self.pk,))
 
+    @staticmethod
+    def nid_to_mention(text):
+        nouns = cache.get("noun_dict") or Noun.make_dict()
+        text = Noun.noun_ex.sub(
+            make_function_with_group(nouns, lambda nid, words: "@[%s](%04d)" % (words[2], nid)),
+            text)
+        return text
+
+    @staticmethod
+    def mention_to_nid(text):
+        text = Noun.mention_ex.sub(make_function_with_group(None, lambda nid, _: "!N%04d!" % nid), text)
+        return text
+
+    @staticmethod
+    def nid_to_en(text):
+        nouns = cache.get("noun_dict") or Noun.make_dict()
+        text = Noun.noun_ex.sub(make_function_with_group(nouns, lambda nid, words: words[0]), text)
+        return text
+
+    @staticmethod
+    def nid_to_ko(text):
+        nouns = cache.get("noun_dict") or Noun.make_dict()
+        text = Noun.noun_ex.sub(make_function_with_group(nouns, lambda nid, words: words[1]), text)
+        return text
+
+    @staticmethod
+    def make_dict():
+        nouns = {}
+        for noun in Noun.objects.all().order_by(Length('name').desc()):
+            key = noun.pk
+
+            # order: en, ko, mixed
+            if noun.final:
+                nouns[key] = (noun.name, noun.final, "%s(%s)" % (noun.name, noun.final))
+            elif noun.translate:
+                nouns[key] = (noun.name, noun.translate, "%s(%s)" % (noun.name, noun.translate))
+            elif noun.papago:
+                nouns[key] = (noun.name, noun.papago, "%s(%s)" % (noun.name, noun.papago))
+            elif noun.google:
+                nouns[key] = (noun.name, noun.google, "%s(%s)" % (noun.name, noun.google))
+            else:
+                nouns[key] = (noun.name, noun.name, noun.name)
+
+        cache.set('noun_dict', nouns, 60*10)
+        return nouns
+
     cate = models.ForeignKey(NounCate, on_delete=models.CASCADE)
-    name = models.CharField('이름', max_length=100)
+    name = models.CharField('이름', max_length=100, unique=True)
     reference = models.TextField('참고의견', null=True, blank=True, default='')
     google = models.CharField('구글', max_length=100, null=True, blank=True, default='')
     papago = models.CharField('파파고', max_length=100, null=True, blank=True, default='')
@@ -152,6 +223,13 @@ class Noun(models.Model):
 
     created_at = models.DateTimeField('생성일', auto_now_add=True)
     updated_at = models.DateTimeField('수정일', auto_now=True)
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if not self.papago:
+            self.papago = papago(self.name)
+        cache.clear()
+        super(Noun, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
 
 
 class Conversation(models.Model):

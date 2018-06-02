@@ -35,7 +35,7 @@ def get_updated(check_from):
 
 def get_nouns():
     nouns = {}
-    area_cate = NounCate.objects.get(name='지형')
+    area_cate = NounCate.objects.get(name='지명, 지형')
     for noun in Noun.objects.all():
         if noun.cate == area_cate:
             addition = "(%s)" % noun.name
@@ -47,9 +47,9 @@ def get_nouns():
         elif noun.translate:
             nouns[noun.pk] = (noun.name, noun.translate + addition)
         elif noun.papago:
-            nouns[noun.pk] = (noun.name, "P: " + noun.papago + addition)
+            nouns[noun.pk] = (noun.name, "P:" + noun.papago + addition)
         elif noun.google:
-            nouns[noun.pk] = (noun.name, "G: " + noun.google + addition)
+            nouns[noun.pk] = (noun.name, "G:" + noun.google + addition)
         else:
             nouns[noun.pk] = (noun.name, noun.name)
 
@@ -82,12 +82,12 @@ def make_patch(nouns_dict):
         # # Replacing original text to translated
         updater = RecursiveUpdateProcessor()
         matched, unmatched = updater.process(cate.name, patch, trans_dict[cate.name], nouns_dict)
-        print('matched:', matched, 'unmatched:', unmatched, " = ", matched * 100 / (matched + unmatched), "%")
+        print('matched:', matched, ', \tunmatched:', unmatched, " \t Percent: ", matched * 100 / (matched + unmatched), "%")
 
         patches[cate.name] = patch
 
     # Package files
-    output_name = "sunless_sea_ko_%s.zip" % timezone.now().strftime('%Y%m%d')
+    output_name = "sunless_sea_ko_%s.zip" % timezone.localtime().strftime('%Y%m%d')
 
     buffer = BytesIO()
     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as myzip:
