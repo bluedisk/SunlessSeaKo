@@ -6,7 +6,6 @@ from django.views.decorators.cache import cache_page
 from .models import Noun, Patch
 
 
-@cache_page(60 * 5)
 def nouns(requests):
     nouns_dict = cache.get("noun_dict") or Noun.make_dict()
     result = [{'uid': '%04d' % key, 'value': values[2]} for key, values in nouns_dict.items()]

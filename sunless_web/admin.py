@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
@@ -14,7 +16,7 @@ from django.utils.translation import gettext as _
 
 from urllib.parse import parse_qsl
 
-from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch
+from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser
 from mentions.widgets import ElasticTextarea, TranslateTextarea
 
 TRANS_HELP = None
@@ -346,3 +348,23 @@ class ConversationAdmin(admin.ModelAdmin):
 @admin.register(Patch)
 class PatchAdmin(admin.ModelAdmin):
     list_display = ['created_at', 'file', 'download']
+
+
+class ProfileInline(admin.StackedInline):
+    model = TelegramUser
+    can_delete = False
+    verbose_name_plural = 'Telegram'
+    fk_name = 'user'
+
+
+class CustomUserAdmin(UserAdmin):
+    inlines = (ProfileInline, )
+
+    def get_inline_instances(self, request, obj=None):
+        if not obj:
+            return list()
+        return super(CustomUserAdmin, self).get_inline_instances(request, obj)
+
+
+admin.site.unregister(get_user_model())
+admin.site.register(get_user_model(), CustomUserAdmin)

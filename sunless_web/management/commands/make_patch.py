@@ -123,7 +123,8 @@ class Command(BaseCommand):
             log = TelegramLog(config['botToken'], config['botGroupId'])
 
         log.log("""오늘도 좋은 하루! 썬리스 씨봇입니다! 
-        😛 오늘 버전 🇰🇷 패치 제작을 시작합니다! 우우우웅~ 털털털!""")
+😛 오늘 버전 🇰🇷 패치 제작을 시작합니다! 
+우우우웅~ 털털털!""")
 
         lastest = get_lastest_patch()
         if lastest:
@@ -135,7 +136,7 @@ class Command(BaseCommand):
 
         if not options['force'] and not noun_updated and not entity_updated:
             log.log("""⁉️ 지자스... 업데이트가 없습니다... 
-            따라서 오늘의 패치도 없습니다...😭""")
+따라서 오늘의 패치도 없습니다...😭""")
             sys.exit(0)
 
         updates = []
@@ -146,18 +147,18 @@ class Command(BaseCommand):
             updates.append("%s에서 %s개" % (key, val))
 
         log.log("""오늘으으은~~! 
-        %s가 변경 되었습니다! 👍
-        
-        🔊 처리를 시작합니다 지기지기~ 우우우웅~~ 둠칫둠칫~ 🔊
-        """ % ", ".join(updates))
+%s가 변경 되었습니다! 👍
+
+🔊 처리를 시작합니다 지기지기~ 우우우웅~~ 둠칫둠칫~ 🔊
+""" % ", ".join(updates))
 
         nouns = get_nouns()
         patch = make_patch(nouns)
 
         log.log("""
 
-        파일 생성 완료! 파일 다운로드는 아래 링크를 이용해 주세요!
-        --------------------------------------------
-        https://sunless.eggpang.net%s
-        """ % patch.get_absolute_url())
+파일 생성 완료! 파일 다운로드는 아래 링크를 이용해 주세요!
+--------------------------------------------
+https://sunless.eggpang.net%s
+""" % patch.get_absolute_url())
 

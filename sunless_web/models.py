@@ -194,6 +194,7 @@ class Noun(models.Model):
 
     @staticmethod
     def make_dict():
+        print("Making dict!")
         nouns = {}
         for noun in Noun.objects.all().order_by(Length('name').desc()):
             key = noun.pk
@@ -210,7 +211,7 @@ class Noun(models.Model):
             else:
                 nouns[key] = (noun.name, noun.name, noun.name)
 
-        cache.set('noun_dict', nouns, 60*10)
+        cache.set('noun_dict', nouns, 60*5)
         return nouns
 
     cate = models.ForeignKey(NounCate, on_delete=models.CASCADE)
@@ -228,8 +229,9 @@ class Noun(models.Model):
              update_fields=None):
         if not self.papago:
             self.papago = papago(self.name)
-        cache.clear()
         super(Noun, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
+        cache.clear()
+        Noun.make_dict()
 
 
 class Conversation(models.Model):
@@ -299,3 +301,15 @@ class Patch(models.Model):
     download = models.IntegerField('다운로드 수', default=0)
 
     created_at = models.DateTimeField('생성일', auto_now_add=True)
+
+
+class TelegramUser(models.Model):
+    class Meta:
+        verbose_name = "텔레그램 유저"
+        verbose_name_plural = "텔레그램 유저 목록"
+
+    def __str__(self):
+        return str(self.telegram_id)
+
+    user = models.OneToOneField(get_user_model(), primary_key=True, related_name='telegram', on_delete=models.deletion.CASCADE)
+    telegram_id = models.IntegerField("Telegram ID")
