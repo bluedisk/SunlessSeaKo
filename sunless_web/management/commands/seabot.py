@@ -245,6 +245,12 @@ class SeaBot:
     def say(self, bot, update):
         bot.send_message(chat_id=update.message.chat_id, text=update.message.text[4:])
 
+    def new_user(self, bot, update):
+        bot.send_message(chat_id=update.message.chat_id, text="%s님 환영합니다~! 저는 번역 프로젝트 지원 봇인 씨봇이 입니다~" % update.message.from_user.full_name)
+        bot.send_message(chat_id=update.message.chat_id, text="번역 프로젝트에 참여하시려면 번역 사이트 계정 생성을 하셔야 합니다.")
+        bot.send_message(chat_id=update.message.chat_id, text="계정 생성을 원하시면 1:1 대화로 아무 문자나 보내주세요!")
+        bot.send_message(chat_id=update.message.chat_id, text="새 한글 패치 파일은 매일 저녁 7시에 이 그룹방에 제일 먼저 업로드 됩니다.")
+
 
 class Command(BaseCommand):
 
@@ -257,20 +263,12 @@ class Command(BaseCommand):
         updater = Updater(token=config['botToken'])
         dispatcher = updater.dispatcher
 
-        process_handler = MessageHandler(Filters.text & Filters.private, seabot.signing)
-        dispatcher.add_handler(process_handler)
-
-        helper_handler = MessageHandler(Filters.text & Filters.group, seabot.chat)
-        dispatcher.add_handler(helper_handler)
-
-        leave_handler = CommandHandler('나가이씨봇아', seabot.leave_chat)
-        dispatcher.add_handler(leave_handler)
-
-        say_handler = CommandHandler('따라해', seabot.say)
-        dispatcher.add_handler(say_handler)
-
-        say_handler = CommandHandler('reload', seabot.reload)
-        dispatcher.add_handler(say_handler)
+        dispatcher.add_handler(MessageHandler(Filters.text & Filters.private, seabot.signing))
+        dispatcher.add_handler(MessageHandler(Filters.text & Filters.group, seabot.chat))
+        dispatcher.add_handler(CommandHandler('나가이씨봇아', seabot.leave_chat))
+        # dispatcher.add_handler(CommandHandler('따라해', seabot.say))
+        dispatcher.add_handler(CommandHandler('reload', seabot.reload))
+        dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, seabot.new_user))
 
         print("Bot is Ready!")
         updater.start_polling()

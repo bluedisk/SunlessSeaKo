@@ -8,7 +8,8 @@ class SunlessConfig(DjangoSuitConfig):
             ChildItem(model='sunless_web.nouncate'),
             ChildItem(model='sunless_web.noun'),
             ChildItem(model='sunless_web.entitycate'),
-            ChildItem(model='sunless_web.entity'),
+            ChildItem(model='sunless_web.areaentity'),
+            ChildItem(model='sunless_web.otherentity')
         ], icon='fa fa-leaf'),
         ParentItem('사용자 관리', children=[
             ChildItem(model='auth.user'),

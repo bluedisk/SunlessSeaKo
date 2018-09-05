@@ -65,7 +65,8 @@ class Entity(models.Model):
                              )
 
     key = models.IntegerField('파일상 ID', db_index=True)
-    hash = models.CharField('HashHex', max_length=70, db_index=True, unique=True)
+    hash = models.CharField('HashHex V1', max_length=70, db_index=True, unique=True)
+    hash_v2 = models.CharField('HashHex v2', max_length=70, db_index=True, unique=True, null=True, blank=True)
 
     parent = models.CharField('부모 항목', max_length=70, null=True, blank=True)
 
@@ -131,6 +132,76 @@ class Entity(models.Model):
             self.status = 'in'
 
         super(Entity, self).save(force_insert, force_update, using, update_fields)
+
+
+class Entry(models.Model):
+    class Meta:
+        verbose_name = '번역 대상'
+        verbose_name_plural = '번역 대상 목록'
+
+    def __str__(self):
+        return self.path
+
+    path = models.CharField('위치', max_length=256, default='')
+
+    def summary(self):
+        return "%s..." % self.text[:50]
+
+    summary.short_description = '요약'
+
+    cate = models.ForeignKey('EntityCate',
+                             verbose_name='소속 파일',
+                             related_name='entries',
+                             null=True,
+                             blank=True,
+                             on_delete=models.CASCADE
+                             )
+
+    hash_v1 = models.CharField('HashHex v1', max_length=70, db_index=True, null=True, blank=True)
+    hash_v2 = models.CharField('HashHex v2', max_length=70, db_index=True, unique=True)
+
+    text_en = models.TextField('원문', null=True, blank=True)
+    text_kr = models.TextField('영한번역', null=True, blank=True)
+    text_jp = models.TextField('일어', null=True, blank=True)
+    text_jpkr = models.TextField('일한번역', null=True, blank=True)
+
+    checker = models.ManyToManyField(get_user_model(), related_name="entries")
+
+    TRANSLATE_STATUS = (
+        ('none', '안됨'),
+        ('proto', '검수 필요'),
+        ('discuss', '논의 필요'),
+        ('verified', '완료')
+    )
+    status = models.CharField('번역 상태', max_length=10, choices=TRANSLATE_STATUS, default='none')
+
+    created_at = models.DateTimeField('생성일', auto_now_add=True)
+    updated_at = models.DateTimeField('수정일', auto_now=True)
+
+    STATUS_HTML = {
+        'none': '<span style="color:#a08080;"><i class="far fa-times-circle"></i> 안됨</span>',
+        'proto': '<span style="color:#8080a0;"><i class="far fa-edit"></i> 검수 필요</span>',
+        'discuss': '<span style="color:#8080a0;"><i class="far fa-edit"></i> 논의 필요</span>',
+        'verified': '<span style="color:#80a080;"><i class="far fa-check-circle"></i> 완료</span>'
+    }
+
+    def status_html(self):
+        return mark_safe(self.STATUS_HTML.get(self.status, 'Error!'))
+    status_html.short_description = '번역상태'
+
+
+class Discuss(models.Model):
+    class Meta:
+        verbose_name = '논의'
+        verbose_name_plural = '논의 목록'
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} : {self.entry.hash_v2}"
+
+    user = models.ForeignKey(get_user_model(), related_name='discusses', on_delete=models.CASCADE)
+    entry = models.ForeignKey('Entry', related_name='discusses', on_delete=models.CASCADE)
+    likes = models.ManyToManyField(get_user_model(), verbose_name='좋아요')
+    text = models.TextField('내용')
 
 
 class NounCate(models.Model):
@@ -313,3 +384,19 @@ class TelegramUser(models.Model):
 
     user = models.OneToOneField(get_user_model(), primary_key=True, related_name='telegram', on_delete=models.deletion.CASCADE)
     telegram_id = models.IntegerField("Telegram ID")
+
+
+# proxy
+
+class AreaEntity(Entity):
+    class Meta:
+        verbose_name = "지역"
+        verbose_name_plural = "지역 목록"
+        proxy = True
+
+
+class OtherEntity(Entity):
+    class Meta:
+        verbose_name = "번역 대상"
+        verbose_name_plural = "번역 대상 목록"
+        proxy = True

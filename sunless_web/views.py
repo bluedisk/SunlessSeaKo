@@ -7,7 +7,7 @@ from .models import Noun, Patch
 
 
 def nouns(requests):
-    nouns_dict = cache.get("noun_dict") or Noun.make_dict()
+    nouns_dict = Noun.make_dict()
     result = [{'uid': '%04d' % key, 'value': values[2]} for key, values in nouns_dict.items()]
 
     return JsonResponse(result, safe=False)

@@ -16,7 +16,8 @@ from django.utils.translation import gettext as _
 
 from urllib.parse import parse_qsl
 
-from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser
+from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser, AreaEntity, \
+    OtherEntity, Entry
 from mentions.widgets import ElasticTextarea, TranslateTextarea
 
 TRANS_HELP = None
@@ -36,7 +37,7 @@ class EntityForm(forms.ModelForm):
         'marked',
         'reference',
         'papago',
-        'google',
+       #'google',
         'translate',
         'final',
     )
@@ -47,31 +48,26 @@ class EntityForm(forms.ModelForm):
         'Description'
     )
 
-    EDITOR_OPTIONS = {
-        "toolbar": [],
-        "extraPlugins": 'autogrow'
-    }
-
     Name_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
-    Name_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
+    #Name_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
 
     Teaser_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Teaser_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    #Teaser_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
 
-    Description_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Description_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Description_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Description_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Description_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    Description_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
+    Description_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
+    Description_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
+    Description_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
+    #Description_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
+    Description_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
+    Description_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
 
     def __init__(self, *args, **kwargs):
         super(EntityForm, self).__init__(*args, **kwargs)
@@ -130,7 +126,7 @@ class EntityAdmin(admin.ModelAdmin):
 
     form = EntityForm
 
-    search_fields = ['key', 'hash', 'original', 'google', 'papago', 'translate', 'final']
+    search_fields = ['key', 'hash', 'original', 'papago', 'translate', 'final'] # 'google',
     list_display_links = ['path', 'summary']
     list_filter = [CheckerFilter, 'status', 'cate', 'parent']
     formfield_overrides = {
@@ -149,8 +145,8 @@ class EntityAdmin(admin.ModelAdmin):
             if not obj or obj.papago.get('Name', None):
                 autolist.append('Name_papago')
 
-            if not obj or obj.google.get('Name', None):
-                autolist.append('Name_google')
+            # if not obj or obj.google.get('Name', None):
+            #     autolist.append('Name_google')
 
             row = ('Name', {
                 'description': '고유명사를 추가하시려면 @를 누르고 타이핑해주세요',
@@ -167,8 +163,8 @@ class EntityAdmin(admin.ModelAdmin):
             if not obj or obj.papago.get('Teaser', None):
                 autolist.append('Teaser_papago')
 
-            if not obj or obj.google.get('Teaser', None):
-                autolist.append('Teaser_google')
+            # if not obj or obj.google.get('Teaser', None):
+            #     autolist.append('Teaser_google')
 
             fieldsets.append(('Teaser', {
                 'description': '고유명사를 추가하시려면 @를 누르고 타이핑해주세요',
@@ -181,8 +177,8 @@ class EntityAdmin(admin.ModelAdmin):
             if not obj or obj.papago.get('Description', None):
                 autolist.append('Description_papago')
 
-            if not obj or obj.google.get('Description', None):
-                autolist.append('Description_google')
+            # if not obj or obj.google.get('Description', None):
+            #     autolist.append('Description_google')
 
             fieldsets.append(('Description', {
                 'description': '고유명사를 추가하시려면 @를 누르고 타이핑해주세요',
@@ -231,7 +227,7 @@ class EntityAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.checker.add(request.user)
 
-        for trans_type in ['papago', 'google', 'marked', 'reference', 'translate', 'final']:
+        for trans_type in ['papago', 'marked', 'reference', 'translate', 'final']: #'google',
             trans = {}
 
             for field in form.FIELDS:
@@ -295,6 +291,18 @@ class EntityAdmin(admin.ModelAdmin):
         return super(EntityAdmin, self).response_change(request, obj)
 
 
+@admin.register(AreaEntity)
+class AreaEntityAdmin(EntityAdmin):
+    def get_queryset(self, request):
+        return self.model.objects.filter(cate='areas')
+
+
+@admin.register(OtherEntity)
+class OtherEntityAdmin(EntityAdmin):
+    def get_queryset(self, request):
+        return self.model.objects.exclude(cate='areas')
+
+
 @admin.register(EntityCate)
 class EntityCateAdmin(admin.ModelAdmin):
     pass
@@ -322,9 +330,9 @@ class NounAdmin(admin.ModelAdmin):
             'all': ['https://use.fontawesome.com/releases/v5.0.13/css/all.css']
         }
 
-    list_display = ['cate_safe', 'name', 'reference', 'google', 'papago', 'translate', 'final']
+    list_display = ['cate_safe', 'name', 'reference', 'papago', 'translate', 'final'] # 'google',
     list_display_links = ['name']
-    list_editable = ['reference', 'google', 'papago', 'translate', 'final']
+    list_editable = ['reference',  'papago', 'translate', 'final'] # 'google',
 
     search_fields = ['name', 'papago', 'translate', 'final']
 
@@ -364,6 +372,11 @@ class CustomUserAdmin(UserAdmin):
         if not obj:
             return list()
         return super(CustomUserAdmin, self).get_inline_instances(request, obj)
+
+
+@admin.register(Entry)
+class EntryAdmin(admin.ModelAdmin):
+    pass
 
 
 admin.site.unregister(get_user_model())
