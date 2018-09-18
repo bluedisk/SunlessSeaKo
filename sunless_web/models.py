@@ -212,7 +212,7 @@ class Translation(models.Model):
     discuss = models.TextField('의견', null=True, blank=True)
 
 
-class Discuss(models.Model):
+class Discussion(models.Model):
     class Meta:
         verbose_name = '논의'
         verbose_name_plural = '논의 목록'
@@ -220,8 +220,8 @@ class Discuss(models.Model):
     def __str__(self):
         return f"{self.user.get_full_name()} : {self.entry.hash_v2}"
 
-    user = models.ForeignKey(get_user_model(), related_name='discusses', on_delete=models.CASCADE)
-    entry = models.ForeignKey('Entry', related_name='discusses', on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), related_name='discussions', on_delete=models.CASCADE)
+    entry = models.ForeignKey('Entry', related_name='discussions', on_delete=models.CASCADE)
     likes = models.ManyToManyField(get_user_model(), verbose_name='좋아요')
     text = models.TextField('내용')
 

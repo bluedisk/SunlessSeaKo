@@ -19,6 +19,9 @@ class SunlessConfig(DjangoSuitConfig):
             ChildItem(model='sunless_web.conversation'),
             ChildItem(model='sunless_web.patch'),
         ], icon='fa fa-telegram'),
+        ParentItem('번역 작업 V2(공사중)', children=[
+            ChildItem(model='sunless_web.entry'),
+        ], icon='fa fa-telegram'),
     )
 
     verbose_name = '라라라'

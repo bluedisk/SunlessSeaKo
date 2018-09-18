@@ -19,7 +19,7 @@ from urllib.parse import parse_qsl
 from suit.widgets import AutosizedTextarea
 
 from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser, AreaEntity, \
-    OtherEntity, Entry
+    OtherEntity, Entry, Translation, Discussion
 from mentions.widgets import ElasticTextarea, TranslateTextarea
 
 TRANS_HELP = None
@@ -376,8 +376,25 @@ class CustomUserAdmin(UserAdmin):
         return super(CustomUserAdmin, self).get_inline_instances(request, obj)
 
 
+class TranslationInline(admin.TabularInline):
+    model = Translation
+
+    formfield_overrides = {
+        models.TextField: {'widget': ElasticTextarea()},
+    }
+
+
+class Discussion(admin.TabularInline):
+    model = Discussion
+
+    formfield_overrides = {
+        models.TextField: {'widget': ElasticTextarea()},
+    }
+
+
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
+    inlines = (TranslationInline, Discussion)
 
     readonly_fields = ['hash_v1', 'hash_v2', 'cate', 'path', 'checker', 'text_en', 'last_revision', 'text_jp', 'text_jpkr', 'status']
 

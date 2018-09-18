@@ -9,7 +9,7 @@ class ElasticTextarea(Textarea):
             )
         }
         js = (
-            'https://code.jquery.com/jquery-1.12.4.min.js',
+            'https://code.jquery.com/jquery-3.3.1.min.js',
             'js/elastic.js',
         )
 
