@@ -76,7 +76,12 @@ def make_patch(nouns_dict):
     patches = {}
     for cate in cates:
         print("Creating %s ----" % cate.name)
-        with open(os.path.join(config['path_original'], '%s.json' % cate.name), 'r') as f:
+        original_json_path = os.path.join(config['path_original'], '%s.json' % cate.name)
+        if not os.path.exists(original_json_path):
+            print("Pass!")
+            continue
+
+        with open(original_json_path, 'r') as f:
             patch = json.load(f)
 
         # # Replacing original text to translated
@@ -91,7 +96,12 @@ def make_patch(nouns_dict):
 
     buffer = BytesIO()
     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as myzip:
-        for cate in EntityCate.objects.all():
+        print("Save %s" % cate.name)
+        for cate in cates:
+            if cate.name not in patches:
+                print("Pass!")
+                continue
+
             patch_text = json.dumps(patches[cate.name], ensure_ascii=False)
             myzip.writestr("%s.json" % cate.name, patch_text)
 
@@ -124,7 +134,7 @@ class Command(BaseCommand):
             log = TelegramLog(config['botToken'], config['botGroupId'])
 
         if not options['pre-check']:
-            log.log("오늘도 좋은 하루! 썬리스 씨봇입니다!\n 😛 오늘 버전 🇰🇷 패치 제작을 시작합니다!\n 우우우웅~ 털털털!")
+            log.log("오늘도 좋은 하루! 썬리스 씨봇입니다!\n 😛 오늘 버전 🇰🇷 패치 제작을 시작합니다!")
 
         lastest = get_lastest_patch()
         if lastest:
@@ -154,7 +164,7 @@ class Command(BaseCommand):
         for key, val in entity_updated.items():
             updates.append("%s에서 %s개" % (key, val))
 
-        log.log("오늘으으은~~! \n %s가 변경 되었습니다! 👍\n\n 🔊 처리를 시작합니다 지기지기~ 우우우웅~~ 둠칫둠칫~ 🔊\n " %
+        log.log("%s가 변경 되었습니다! 👍\n\n 🔊 처리를 시작합니다 지기지기~ 우우우웅~~ 둠칫둠칫~ 🔊\n " %
                 ", ".join(updates))
 
         nouns = get_nouns()

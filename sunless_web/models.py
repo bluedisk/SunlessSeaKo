@@ -161,9 +161,10 @@ class Entry(models.Model):
     hash_v2 = models.CharField('HashHex v2', max_length=70, db_index=True, unique=True)
 
     text_en = models.TextField('원문', null=True, blank=True)
-    text_kr = models.TextField('영한번역', null=True, blank=True)
     text_jp = models.TextField('일어', null=True, blank=True)
     text_jpkr = models.TextField('일한번역', null=True, blank=True)
+
+    last_revision = models.PositiveSmallIntegerField('최종 리비전', default=0)
 
     checker = models.ManyToManyField(get_user_model(), related_name="entries")
 
@@ -188,6 +189,27 @@ class Entry(models.Model):
     def status_html(self):
         return mark_safe(self.STATUS_HTML.get(self.status, 'Error!'))
     status_html.short_description = '번역상태'
+
+
+class Translation(models.Model):
+    class Meta:
+        verbose_name = '번역'
+        verbose_name_plural = '번역 목록'
+
+        ordering = ['-revision']
+
+    def __str__(self):
+        if self.user:
+            return f"{self.user.get_full_name()} : {self.text}"
+
+        return f"Someone : {self.text}"
+
+    user = models.ForeignKey(get_user_model(), related_name="translations", on_delete=models.SET_NULL, null=True)
+    entry = models.ForeignKey(Entry, related_name="translations", on_delete=models.CASCADE)
+    revision = models.PositiveSmallIntegerField('리비전', default=1)
+
+    text = models.TextField('번역 제안')
+    discuss = models.TextField('의견', null=True, blank=True)
 
 
 class Discuss(models.Model):

@@ -25,13 +25,13 @@ class TranslateTextarea(ElasticTextarea):
     class Media:
         css = {
             'all': (
-                'jquery-ui/jquery-ui.min.css',
+                'https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css',
                 'jquery-mentions/jquery.mentions.css',
             )
         }
         js = (
-            'https://code.jquery.com/jquery-1.12.4.min.js',
-            'jquery-ui/jquery-ui.min.js',
+            'https://code.jquery.com/jquery-3.3.1.min.js',
+            'https://code.jquery.com/ui/1.12.1/jquery-ui.min.js',
             'jquery-mentions/jquery.mentions.js',
             'js/translate.js',
         )

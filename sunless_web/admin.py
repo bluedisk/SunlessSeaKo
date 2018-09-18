@@ -16,6 +16,8 @@ from django.utils.translation import gettext as _
 
 from urllib.parse import parse_qsl
 
+from suit.widgets import AutosizedTextarea
+
 from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser, AreaEntity, \
     OtherEntity, Entry
 from mentions.widgets import ElasticTextarea, TranslateTextarea
@@ -376,7 +378,27 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
-    pass
+
+    readonly_fields = ['hash_v1', 'hash_v2', 'cate', 'path', 'checker', 'text_en', 'last_revision', 'text_jp', 'text_jpkr', 'status']
+
+    fieldsets = [
+            ('Location', {
+                'description': '게임상의 데이터 위치 정보',
+                'fields': ['hash_v1', 'hash_v2', ('cate', 'path')],
+            }),
+            ('Status', {
+                'description': '진행상태',
+                'fields': ['status', 'checker'],
+            }),
+            ('Translation', {
+                'description': '번역 진행',
+                'fields': [('text_en', 'last_revision'), ('text_jpkr', 'text_jp')],
+            }),
+    ]
+
+    formfield_overrides = {
+        models.TextField: {'widget': ElasticTextarea()},
+    }
 
 
 admin.site.unregister(get_user_model())
