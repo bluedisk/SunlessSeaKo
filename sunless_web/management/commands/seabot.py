@@ -17,7 +17,11 @@ from sunless_web.models import Conversation, TelegramUser
 
 import logging
 import re
-from pprint import pprint
+
+logging.basicConfig(format='%(asctime)-15s %(message)s', filename='sebot.log')
+
+tglogger = logging.getLogger("seabot")
+tglogger.setLevel(logging.DEBUG)
 
 AGREE = (
     '응.*',
@@ -64,8 +68,6 @@ class SeaBot:
 
     # Signing
     def signing(self, bot, update):
-        # print("msg from ", update.message.from_user.username, " ", update.message.text)
-
         chat_user = update.message.from_user
         if chat_user.id not in self.progress:
             self.progress[chat_user.id] = {
@@ -84,17 +86,14 @@ class SeaBot:
         if next_phase == self.hello_yn:
             bot.send_message(chat_id=update.message.chat_id, text=answer,
                              reply_markup=ReplyKeyboardMarkup(
-                                 keyboard=[
-                                     [KeyboardButton(text="응"), KeyboardButton(text="아니")]
-                                 ]
+                                 keyboard=[[KeyboardButton(text="응"), KeyboardButton(text="아니")]]
                              ))
         else:
             bot.send_message(chat_id=update.message.chat_id, text=answer, reply_markup=ReplyKeyboardRemove())
 
         if not next_phase:
-            #pprint(progress)
-
-            new_user = get_user_model().objects.create_user(progress['username'], progress['email'], progress['password'])
+            new_user = get_user_model().objects.create_user(progress['username'], progress['email'],
+                                                            progress['password'])
             new_user.first_name = progress['firstname']
             new_user.last_name = progress['lastname']
             new_user.is_staff = True
@@ -106,7 +105,7 @@ class SeaBot:
             telegram_user.telegram_id = progress['telegram_id']
             telegram_user.save()
 
-            print("User ", new_user.username, "has created")
+            tglogger.debug("User ", new_user.username, "has created")
 
             bot.send_message(chat_id=update.message.chat_id,
                              text="계정 생성이 완료 되었습니다! \r\nhttp://sunless.eggpang.net/work 에서 로그인해주세요!")
@@ -115,24 +114,22 @@ class SeaBot:
             progress['phase'] = next_phase
 
     def hello(self, _, progress):
-        print(f"Finding user {progress['firstname']} / {progress['lastname']} "
-              f"( {progress['username']}:{progress['telegram_id']} )")
+        tglogger.debug(f"Finding user {progress['firstname']} / {progress['lastname'] } ( {progress['username']}: "
+                       f"{progress['telegram_id']} )")
 
         try:
-            already = get_user_model().objects.select_related('telegram').get(Q(username=progress['username']) |
-                                                   Q(telegram__telegram_id=progress['telegram_id']) |
-                                                   (
-                                                        Q(first_name=progress['firstname']) &
-                                                        Q(last_name=progress['lastname'])
-                                                   ))
-            print("Found " + str(already))
+            already = get_user_model() \
+                .objects.select_related('telegram') \
+                .get(Q(username=progress['username']) | Q(telegram__telegram_id=progress['telegram_id']) |
+                     (Q(first_name=progress['firstname']) & Q(last_name=progress['lastname'])))
+            tglogger.debug("Found " + str(already))
         except Exception as e:
-            pprint(e)
-            print("User Not Found")
+            tglogger.error(e)
+            tglogger.error("User Not Found")
             already = None
 
         if already and not hasattr(already, 'telegram'):
-            print("Update old user")
+            tglogger.debug("Update old user")
             already.first_name = progress['firstname']
             already.last_name = progress['lastname']
             already.save()
@@ -143,22 +140,21 @@ class SeaBot:
             telegram.save()
 
         if already:
-            print("Exsisting User")
-            return f"""안녕하세요 {progress['username']}님! 다시 봬니 반갑습니다!
-{progress['username']}님은 이미 계정을 갖고 계시니 제가 도와드릴건 없지만 
-나중에 제가 더 많은 일을 할 수 있게 되면 도움이 되드리겠습니다! 
-참고로 번역 사이트 주소는 http://sunless.eggpang.net/work 입니다!
-""", self.hello
+            tglogger.debug("Exsisting User")
+            return f"안녕하세요 {progress['username']}님! 다시 봬니 반갑습니다!\r\n" \
+                   f"{progress['username']}님은 이미 계정을 갖고 계시니 제가 도와드릴건 없지만 \r\n" \
+                   f"나중에 제가 더 많은 일을 할 수 있게 되면 도움이 되드리겠습니다! \r\n" \
+                   f"참고로 번역 사이트 주소는 http://sunless.eggpang.net/work 입니다!", self.hello
         else:
-            print("New User")
+            tglogger.debug("New User")
             return "안녕하세요? Sunless Sea 번역 사이트 계정을 만드실 건가요?", self.hello_yn
 
     def hello_yn(self, message, progress):
         if compare_ex(message.text, AGREE):
             if progress['username']:
-                return f"""알겠습니다. 계정은 텔레그램과 똑같이 {progress['username']}로 할께요!
-네.. 어자피 선택권 따위 없어요... 
-만약의 경우 연락드릴 이메일 주소를 입력해주세요.""", self.email
+                return f"알겠습니다. 계정은 텔레그램과 똑같이 {progress['username']}로 할께요!\r\n" \
+                       f"네.. 어자피 선택권 따위 없어요...\r\n" \
+                       f"만약의 경우 연락드릴 이메일 주소를 입력해주세요.", self.email
             else:
                 return f"""알겠습니다. 번역 사이트에서 사용하실 로그인 아이디를 정해주세요!.""", self.username
 
@@ -218,21 +214,23 @@ class SeaBot:
     # chatting
     #
     def reload(self, bot, update):
-        print("Reloading....")
+        tglogger.debug("Reloading....")
         if update:
             bot.send_message(chat_id=update.message.chat_id, text="대화 목록 업데이트 중...")
         self.conversations = list(Conversation.objects.prefetch_related("answers").all())
         if update:
             bot.send_message(chat_id=update.message.chat_id, text="업데이트 완료! 총 %d개 로딩" % len(self.conversations))
 
-    def chat(self, bot, update):
-        print(f"Checking group chat {update.message.from_user.fullname}:"
-              f" '{update.message.text[:10]}...' from {update.message.from_user.id}")
+    def botchat(self, bot, update):
+        tglogger.debug(
+            f'Checking group chat {update.message.from_user.username}: \'{update.message.text[:10]}...\' from '
+            f'{update.message.from_user.id}')
+
         for convers in self.conversations:
             res = convers.findall(update.message.text)
             if res and random.random() <= convers.chance:
                 answer = random.choice(convers.answers.all())
-                print("Answer for ", update.message.text, "as", answer, "in", update.message.chat_id)
+                tglogger.debug(f"Answer for {update.message.text} as {answer} in {update.message.chat_id}")
                 bot.send_message(chat_id=update.message.chat_id, text=answer.answer)
 
     #
@@ -242,11 +240,9 @@ class SeaBot:
         bot.send_message(chat_id=update.message.chat_id, text="네... 아흑...")
         bot.leave_chat(update.message.chat_id)
 
-    def say(self, bot, update):
-        bot.send_message(chat_id=update.message.chat_id, text=update.message.text[4:])
-
     def new_user(self, bot, update):
-        bot.send_message(chat_id=update.message.chat_id, text="%s님 환영합니다~! 저는 번역 프로젝트 지원 봇인 씨봇이 입니다~" % update.message.from_user.full_name)
+        bot.send_message(chat_id=update.message.chat_id,
+                         text="%s님 환영합니다~! 저는 번역 프로젝트 지원 봇인 씨봇이 입니다~" % update.message.from_user.full_name)
         bot.send_message(chat_id=update.message.chat_id, text="번역 프로젝트에 참여하시려면 번역 사이트 계정 생성을 하셔야 합니다.")
         bot.send_message(chat_id=update.message.chat_id, text="계정 생성을 원하시면 1:1 대화로 아무 문자나 보내주세요!")
         bot.send_message(chat_id=update.message.chat_id, text="새 한글 패치 파일은 매일 저녁 7시에 이 그룹방에 제일 먼저 업로드 됩니다.")
@@ -264,11 +260,10 @@ class Command(BaseCommand):
         dispatcher = updater.dispatcher
 
         dispatcher.add_handler(MessageHandler(Filters.text & Filters.private, seabot.signing))
-        dispatcher.add_handler(MessageHandler(Filters.text & Filters.group, seabot.chat))
+        dispatcher.add_handler(MessageHandler(Filters.text & Filters.group, seabot.botchat))
         dispatcher.add_handler(CommandHandler('나가이씨봇아', seabot.leave_chat))
-        # dispatcher.add_handler(CommandHandler('따라해', seabot.say))
         dispatcher.add_handler(CommandHandler('reload', seabot.reload))
         dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, seabot.new_user))
 
-        print("Bot is Ready!")
+        tglogger.info("Bot is Ready!")
         updater.start_polling()

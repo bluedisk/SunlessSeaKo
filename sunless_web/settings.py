@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'sunless_web.apps.SunlessConfig',
 
     'django.contrib.admin',
+    'django.contrib.sites',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
 
     # external modules
+    'account',
     'django_json_widget',
     'dal',
     'dal_select2',

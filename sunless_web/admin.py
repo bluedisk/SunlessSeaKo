@@ -2,8 +2,9 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render
+from django.urls import reverse, path
 
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
@@ -19,7 +20,7 @@ from urllib.parse import parse_qsl
 from suit.widgets import AutosizedTextarea
 
 from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser, AreaEntity, \
-    OtherEntity, Entry, Translation, Discussion
+    OtherEntity, Entry, Translation, EntryPath, Discussion
 from mentions.widgets import ElasticTextarea, TranslateTextarea
 
 TRANS_HELP = None
@@ -39,7 +40,6 @@ class EntityForm(forms.ModelForm):
         'marked',
         'reference',
         'papago',
-       #'google',
         'translate',
         'final',
     )
@@ -53,21 +53,18 @@ class EntityForm(forms.ModelForm):
     Name_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
-    #Name_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
     Name_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 30, 'rows': 1}))
 
     Teaser_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
-    #Teaser_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
     Teaser_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 100, 'rows': 1}))
 
     Description_marked = forms.CharField(label='원문', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
     Description_reference = forms.CharField(label='의견', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
     Description_papago = forms.CharField(label='파파고', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
-    #Description_google = forms.CharField(label='구글', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
     Description_translate = forms.CharField(label='번역', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
     Description_final = forms.CharField(label='최종본', help_text=TRANS_HELP, required=False, widget=TranslateTextarea({'cols': 150, 'rows': 1}))
 
@@ -376,6 +373,37 @@ class CustomUserAdmin(UserAdmin):
         return super(CustomUserAdmin, self).get_inline_instances(request, obj)
 
 
+class EntryInline(admin.StackedInline):
+    model = Entry
+    extra = 0
+
+    formfield_overrides = {
+        models.TextField: {'widget': ElasticTextarea()},
+    }
+
+    readonly_fields = ['text_en', 'text_jp', 'text_jpkr', 'status', 'basepath', 'object']
+
+    fieldsets = [
+            ('Location', {
+                'description': '게임상의 데이터 위치 정보',
+                'fields': (('object', 'status'), ),
+            }),
+            ('Translation', {
+                'description': '번역 진행',
+                'fields': ('text_en', 'text_jp', 'text_jpkr', ),
+            }),
+    ]
+
+
+@admin.register(EntryPath)
+class EntryPathAdmin(admin.ModelAdmin):
+    inlines = (EntryInline, )
+    readonly_fields = ('name', )
+    search_fields = ("name",)
+
+    change_form_template = "admin/translate.html"
+
+
 class TranslationInline(admin.TabularInline):
     model = Translation
 
@@ -384,8 +412,10 @@ class TranslationInline(admin.TabularInline):
     }
 
 
-class Discussion(admin.TabularInline):
+class DiscussionInline(admin.TabularInline):
     model = Discussion
+
+    readonly_fields = ['translate']
 
     formfield_overrides = {
         models.TextField: {'widget': ElasticTextarea()},
@@ -394,14 +424,16 @@ class Discussion(admin.TabularInline):
 
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
-    inlines = (TranslationInline, Discussion)
+    inlines = (TranslationInline, DiscussionInline)
 
-    readonly_fields = ['hash_v1', 'hash_v2', 'cate', 'path', 'checker', 'text_en', 'last_revision', 'text_jp', 'text_jpkr', 'status']
+    search_fields = ['basepath', 'object', 'hash_v1', 'hash_v2', 'text_en']
+    readonly_fields = ['hash_v1', 'hash_v2', 'checker', 'text_en',
+                       'text_jp', 'text_jpkr', 'status', 'basepath', 'object']
 
     fieldsets = [
             ('Location', {
                 'description': '게임상의 데이터 위치 정보',
-                'fields': ['hash_v1', 'hash_v2', ('cate', 'path')],
+                'fields': ['hash_v1', 'hash_v2', ('basepath', 'object')],
             }),
             ('Status', {
                 'description': '진행상태',
@@ -409,7 +441,7 @@ class EntryAdmin(admin.ModelAdmin):
             }),
             ('Translation', {
                 'description': '번역 진행',
-                'fields': [('text_en', 'last_revision'), ('text_jpkr', 'text_jp')],
+                'fields': [('text_en', ), ('text_jpkr', 'text_jp')],
             }),
     ]
 

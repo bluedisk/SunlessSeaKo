@@ -1,9 +1,13 @@
-from django.http import JsonResponse, HttpResponseRedirect
-from django.shortcuts import render
-from django.core.cache import cache
-from django.views.decorators.cache import cache_page
+import json
+from json import JSONDecodeError
 
-from .models import Noun, Patch
+from account.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+
+from .models import Noun, Patch, Discussion, Translation, Entry
 
 
 def nouns(requests):
@@ -23,3 +27,55 @@ def download(request, patch_id):
     patch.save()
 
     return HttpResponseRedirect(patch.file.url)
+
+
+def like(request, action, target_type, target_id):
+    target_model = {
+        "discuss": Discussion,
+        "trans": Translation
+    }.get(target_type, None)
+
+    if not target_model:
+        return HttpResponseBadRequest()
+
+    target = get_object_or_404(target_model, pk=target_id)
+
+    if action == "like":
+        target.likes.add(request.user)
+    elif action == "unlike":
+        target.likes.remove(request.user)
+    else:
+        return HttpResponseBadRequest()
+
+    return JsonResponse([liker.pk for liker in target.likes.all()], safe=False)
+
+
+@csrf_exempt
+@staff_member_required
+def add_post(request, entry_id):
+    entry = get_object_or_404(Entry, pk=entry_id)
+
+    try:
+        data = json.loads(request.body)
+    except JSONDecodeError:
+        return HttpResponseBadRequest()
+
+    if data['postType'] == 'translate':
+        trans = Translation()
+        trans.entry = entry
+        trans.user = request.user
+        trans.text = data['postData']
+        trans.save()
+
+    elif data['postType'] == 'discuss':
+        discuss = Discussion()
+        discuss.entry = entry
+        discuss.user = request.user
+        discuss.msg = data['postData']
+        discuss.save()
+
+    else:
+        return HttpResponseBadRequest()
+
+    return JsonResponse(entry.to_json(), safe=False)
+
