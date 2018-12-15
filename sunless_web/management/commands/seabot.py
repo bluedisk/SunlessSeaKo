@@ -105,7 +105,7 @@ class SeaBot:
             telegram_user.telegram_id = progress['telegram_id']
             telegram_user.save()
 
-            tglogger.debug("User ", new_user.username, "has created")
+            tglogger.debug(f"User {str(new_user.username)} has created")
 
             bot.send_message(chat_id=update.message.chat_id,
                              text="계정 생성이 완료 되었습니다! \r\nhttp://sunless.eggpang.net/work 에서 로그인해주세요!")
