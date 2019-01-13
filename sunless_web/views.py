@@ -1,7 +1,6 @@
 import json
 from json import JSONDecodeError
 
-from account.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
@@ -52,7 +51,7 @@ def like(request, action, target_type, target_id):
 
 @csrf_exempt
 @staff_member_required
-def add_post(request, entry_id):
+def add_translate(request, entry_id):
     entry = get_object_or_404(Entry, pk=entry_id)
 
     try:
@@ -66,10 +65,25 @@ def add_post(request, entry_id):
         trans.user = request.user
         trans.text = data['postData']
         trans.save()
+    else:
+        return HttpResponseBadRequest()
 
-    elif data['postType'] == 'discuss':
+    return JsonResponse(entry.to_json(), safe=False)
+
+
+@csrf_exempt
+@staff_member_required
+def add_discuss(request, translate_id):
+    translate = get_object_or_404(Translation, pk=translate_id)
+
+    try:
+        data = json.loads(request.body)
+    except JSONDecodeError:
+        return HttpResponseBadRequest()
+
+    if data['postType'] == 'discuss':
         discuss = Discussion()
-        discuss.entry = entry
+        discuss.translate = translate
         discuss.user = request.user
         discuss.msg = data['postData']
         discuss.save()
@@ -77,5 +91,4 @@ def add_post(request, entry_id):
     else:
         return HttpResponseBadRequest()
 
-    return JsonResponse(entry.to_json(), safe=False)
-
+    return JsonResponse(translate.to_json(), safe=False)

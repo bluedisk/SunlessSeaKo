@@ -27,7 +27,8 @@ urlpatterns = [
     path('download/<int:patch_id>/', views.download, name='download'),
 
     path('api/like/<str:action>/<str:target_type>/<int:target_id>/', views.like, name='like'),
-    path('api/post/<str:entry_id>/', views.add_post, name='add_post'),
+    path('api/translate/<str:entry_id>/', views.add_translate, name='add_translate'),
+    path('api/discuss/<str:translate_id>/', views.add_discuss, name='add_discuss'),
 
     path('', views.home)
 ]

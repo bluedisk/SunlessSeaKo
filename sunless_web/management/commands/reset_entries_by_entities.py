@@ -37,15 +37,15 @@ class Command(BaseCommand):
                         if translate:
                             trans = Translation(entry=entry, text=translate)
                             trans.save()
-                            Discussion(entry=entry, msg='기존 유저 번역 등록', translate=trans).save()
+                            Discussion(msg='기존 유저 번역 등록', translate=trans).save()
 
                         if final:
                             trans = Translation(entry=entry, text=final)
                             trans.save()
-                            Discussion(entry=entry, msg='기존 유저 번역 등록', translate=trans).save()
+                            Discussion(msg='기존 유저 번역 등록', translate=trans).save()
 
                         if reference:
-                            Discussion(entry=entry, msg=reference).save()
+                            entry.reference = reference
 
                     except Entry.DoesNotExist:
                         print(entity.hash, field, entity.path())

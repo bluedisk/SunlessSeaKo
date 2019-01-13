@@ -401,15 +401,10 @@ class EntryPathAdmin(admin.ModelAdmin):
     readonly_fields = ('name', )
     search_fields = ("name",)
 
+    list_display = ('name', 'status', 'entry_count')
+    list_filter = ('status', )
+
     change_form_template = "admin/translate.html"
-
-
-class TranslationInline(admin.TabularInline):
-    model = Translation
-
-    formfield_overrides = {
-        models.TextField: {'widget': ElasticTextarea()},
-    }
 
 
 class DiscussionInline(admin.TabularInline):
@@ -422,9 +417,21 @@ class DiscussionInline(admin.TabularInline):
     }
 
 
+class TranslationInline(admin.TabularInline):
+    model = Translation
+    inlines = (DiscussionInline, )
+
+    formfield_overrides = {
+        models.TextField: {'widget': ElasticTextarea()},
+    }
+
+
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
-    inlines = (TranslationInline, DiscussionInline)
+    inlines = (TranslationInline, )
+
+    list_display = ('hash_v2', 'fullpath', 'summary')
+    list_filter = ('status',)
 
     search_fields = ['basepath', 'object', 'hash_v1', 'hash_v2', 'text_en']
     readonly_fields = ['hash_v1', 'hash_v2', 'checker', 'text_en',

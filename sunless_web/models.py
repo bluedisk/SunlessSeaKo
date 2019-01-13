@@ -162,6 +162,10 @@ class EntryPath(models.Model):
     def to_json_text(self):
         return mark_safe(json.dumps(self.to_json(), ensure_ascii=False))
 
+    def entry_count(self):
+        return self.entries.count()
+    entry_count.short_description = '포함 항목 개수'
+
     name = models.CharField('위치', max_length=256, default='')
     cate = models.ForeignKey('EntityCate',
                              verbose_name='소속 파일',
@@ -171,6 +175,25 @@ class EntryPath(models.Model):
                              on_delete=models.CASCADE
                              )
 
+    TRANSLATE_STATUS = (
+        ('none', '안됨'),
+        ('partial', '부분번역'),
+        ('finished', '완료')
+    )
+    status = models.CharField('번역 상태', max_length=10, choices=TRANSLATE_STATUS, default='none')
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        children_status = [ c.status for c in self.entries.all() ]
+
+        if 'none' not in children_status and 'discuss' not in children_status:
+            self.status = 'finished'
+        elif 'discuss' not in children_status and 'verified' not in children_status:
+            self.status = 'none'
+        else:
+            self.status = 'partial'
+
+        super(EntryPath, self).save(force_insert, force_update, using, update_fields)
+
 
 class Entry(models.Model):
     class Meta:
@@ -178,18 +201,21 @@ class Entry(models.Model):
         verbose_name_plural = '번역 대상 목록'
 
     def __str__(self):
-        return self.fullpath
+        return self.fullpath()
 
     path = models.ForeignKey('EntryPath', null=True, on_delete=models.SET_NULL, related_name='entries')
     basepath = models.CharField('위치', max_length=256, default='')
     object = models.CharField('객체명', max_length=256, default='')
 
-    @property
     def fullpath(self):
         return "/".join([self.basepath, self.object])
 
+    fullpath.short_description = '위치'
+
     def summary(self):
         return "%s..." % self.text_en[:50]
+
+    summary.short_description = '요약'
 
     def get_trans(self, accept_jpkr=False):
         trans = self.translations.objects.first()
@@ -220,34 +246,13 @@ class Entry(models.Model):
             'updated_at': naturaltime(self.updated_at),
 
             'translations': self.translations_json(),
-            'discusses': self.discusses_json(),
         }
 
     def translations_json(self):
-        return [{
-                'pk': t.pk,
-                'user': t.user.username if t.user else 'System',
-                'text': t.html,
-                'likes': [liker.pk for liker in t.likes.all()],
-                'created_at': naturaltime(self.created_at),
-                'updated_at': naturaltime(self.updated_at),
-            } for t in self.translations.order_by('created_at')]
-
-    def discusses_json(self):
-        return [{
-                'pk': t.pk,
-                'user': t.user.username if t.user else 'System',
-                'msg': t.msg,
-                'translate': t.translate.pk if t.translate else '',
-                'likes': [liker.pk for liker in t.likes.all()],
-                'created_at': naturaltime(self.created_at),
-                'updated_at': naturaltime(self.updated_at),
-            } for t in self.discusses.order_by('created_at')]
+        return [trans.to_json() for trans in self.translations.order_by('created_at')]
 
     def to_json_text(self):
         return mark_safe(json.dumps(self.to_json(), ensure_ascii=False))
-
-    summary.short_description = '요약'
 
     hash_v1 = models.CharField('HashHex v1', max_length=70, db_index=True, null=True, blank=True)
     hash_v2 = models.CharField('HashHex v2', max_length=70, db_index=True, unique=True)
@@ -256,13 +261,13 @@ class Entry(models.Model):
     text_jp = models.TextField('일어', null=True, blank=True)
     text_jpkr = models.TextField('일한번역', null=True, blank=True)
     text_pp = models.TextField('파파고', null=True, blank=True)
+    reference = models.TextField('참고', null=True, blank=True)
 
     checker = models.ManyToManyField(get_user_model(), related_name="entries")
 
     TRANSLATE_STATUS = (
         ('none', '안됨'),
-        ('need_to_discuss', '논의 필요'),
-        ('verified', '완료')
+        ('finished', '완료')
     )
     status = models.CharField('번역 상태', max_length=10, choices=TRANSLATE_STATUS, default='none')
 
@@ -280,6 +285,12 @@ class Entry(models.Model):
 
     status_html.short_description = '번역상태'
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if update_fields and 'status' in update_fields:
+            self.entry.path.save()
+
+        super(Entry, self).save(force_insert, force_update, using, update_fields)
+
 
 class Translation(models.Model):
     class Meta:
@@ -290,9 +301,20 @@ class Translation(models.Model):
 
     def __str__(self):
         if self.user:
-            return f"{self.user.get_full_name()}#{self.pk}"
+            return f"{self.user.username}#{self.pk}"
 
         return f"Someone#{self.pk}"
+
+    def to_json(self):
+        return {
+            'id': self.pk,
+            'user': self.user.username if self.user else 'System',
+            'text': self.html,
+            'likes': [liker.pk for liker in self.likes.all()],
+            'created_at': naturaltime(self.created_at),
+            'updated_at': naturaltime(self.updated_at),
+            'discusses': [discuss.to_json() for discuss in self.discusses.order_by('created_at')]
+        }
 
     @property
     def html(self):
@@ -308,6 +330,13 @@ class Translation(models.Model):
     created_at = models.DateTimeField('생성일', auto_now_add=True)
     updated_at = models.DateTimeField('수정일', auto_now=True)
 
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if self.entry.status != 'finished':
+            self.entry.status='finished'
+            self.entry.save()
+
+        super(Translation, self).save(force_insert, force_update, using, update_fields)
+
 
 class Discussion(models.Model):
     class Meta:
@@ -317,15 +346,22 @@ class Discussion(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"{self.user.get_full_name()}#{self.pk}" if self.user else f"Someone#{self.pk}"
+        return f"{self.user.username}#{self.pk}" if self.user else f"Someone#{self.pk}"
+
+    def to_json(self):
+        return {
+            'id': self.pk,
+            'user': self.user.username if self.user else 'System',
+            'msg': self.msg,
+            'created_at': naturaltime(self.created_at),
+            'updated_at': naturaltime(self.updated_at),
+        }
 
     user = models.ForeignKey(get_user_model(), related_name="discusses", on_delete=models.SET_NULL, null=True)
-    entry = models.ForeignKey(Entry, related_name="discusses", on_delete=models.CASCADE)
-    translate = models.ForeignKey(Translation, related_name="discuss", on_delete=models.CASCADE, null=True)
+    translate = models.ForeignKey(Translation, related_name="discusses", on_delete=models.CASCADE, null=True)
 
     msg = models.TextField('내용', null=True, blank=True)
 
-    likes = models.ManyToManyField(get_user_model(), verbose_name='좋아요')
     created_at = models.DateTimeField('생성일', auto_now_add=True)
     updated_at = models.DateTimeField('수정일', auto_now=True)
 
@@ -356,7 +392,7 @@ class Noun(models.Model):
         verbose_name_plural = '명사 사전'
 
     mention_ex = re.compile(r'@\[.+?\]\((\d{4})\)')
-    noun_ex = re.compile(r'\!N(\d{4})\!')
+    noun_ex = re.compile(r'!N(\d{4})!')
 
     def __str__(self):
         return str(self.name)
@@ -370,7 +406,7 @@ class Noun(models.Model):
             return ''
 
         nouns = cache.get("noun_dict") or Noun.make_dict()
-        return  Noun.noun_ex.sub(
+        return Noun.noun_ex.sub(
             make_function_with_group(nouns, lambda nid, words: "@[%s](%04d)" % (words[2], nid)),
             text)
 
@@ -379,7 +415,7 @@ class Noun(models.Model):
         if not text:
             return ''
 
-        return  Noun.mention_ex.sub(make_function_with_group(None, lambda nid, _: "!N%04d!" % nid), text)
+        return Noun.mention_ex.sub(make_function_with_group(None, lambda nid, _: "!N%04d!" % nid), text)
 
     @staticmethod
     def nid_to_en(text):
@@ -387,7 +423,7 @@ class Noun(models.Model):
             return ''
 
         nouns = cache.get("noun_dict") or Noun.make_dict()
-        return  Noun.noun_ex.sub(make_function_with_group(nouns, lambda nid, words: words[0]), text)
+        return Noun.noun_ex.sub(make_function_with_group(nouns, lambda nid, words: words[0]), text)
 
     @staticmethod
     def nid_to_ko(text):
@@ -404,7 +440,8 @@ class Noun(models.Model):
 
         nouns = cache.get("noun_dict") or Noun.make_dict()
         return mark_safe(Noun.noun_ex.sub(
-            make_function_with_group(nouns, lambda nid, words: '<span class="badge badge-info">%s(%s)</span>' % (words[0], words[1])),
+            make_function_with_group(nouns, lambda nid, words: '<span class="badge badge-info">%s(%s)</span>' % (
+                words[0], words[1])),
             text))
 
     @staticmethod
@@ -444,7 +481,7 @@ class Noun(models.Model):
              update_fields=None):
         if not self.papago:
             self.papago = papago(self.name)
-        super(Noun, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
+        super(Noun, self).save(force_insert, force_update, using, update_fields)
         cache.clear()
         Noun.make_dict()
 
