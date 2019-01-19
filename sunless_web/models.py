@@ -6,6 +6,7 @@ from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
+from django.db.models import Count
 from django.db.models.functions import Length
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -164,6 +165,7 @@ class EntryPath(models.Model):
 
     def entry_count(self):
         return self.entries.count()
+
     entry_count.short_description = '포함 항목 개수'
 
     name = models.CharField('위치', max_length=256, default='')
@@ -182,20 +184,22 @@ class EntryPath(models.Model):
     )
     status = models.CharField('번역 상태', max_length=10, choices=TRANSLATE_STATUS, default='none')
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        children_status = [ c.status for c in self.entries.all() ]
+    def update_status(self):
+        children_status = [c.status for c in self.entries.all()]
 
-        if 'none' not in children_status and 'discuss' not in children_status:
+        if 'none' not in children_status:
             self.status = 'finished'
-        elif 'discuss' not in children_status and 'verified' not in children_status:
+        elif 'finished' not in children_status:
             self.status = 'none'
         else:
             self.status = 'partial'
 
-        super(EntryPath, self).save(force_insert, force_update, using, update_fields)
+        self.save()
 
 
 class Entry(models.Model):
+    """ 번역 항목 """
+
     class Meta:
         verbose_name = '번역 대상'
         verbose_name_plural = '번역 대상 목록'
@@ -203,28 +207,48 @@ class Entry(models.Model):
     def __str__(self):
         return self.fullpath()
 
+    def get_absolute_url(self):
+        """ 어드민 수정 페이지 링크 """
+        return reverse('admin:sunless_web_entrypath_change', args=(self.path.pk,))
+
+    @staticmethod
+    def make_hash(fullpath):
+        """ 해쉬값 V2 생성하기 """
+        return hashlib.md5(fullpath.encode('utf8')).hexdigest()
+
     path = models.ForeignKey('EntryPath', null=True, on_delete=models.SET_NULL, related_name='entries')
     basepath = models.CharField('위치', max_length=256, default='')
     object = models.CharField('객체명', max_length=256, default='')
 
     def fullpath(self):
+        """ 파일 상의 위치 가져오기 """
         return "/".join([self.basepath, self.object])
 
     fullpath.short_description = '위치'
 
     def summary(self):
+        """ 내용 요약 """
         return "%s..." % self.text_en[:50]
 
     summary.short_description = '요약'
 
-    def get_trans(self, accept_jpkr=False):
-        trans = self.translations.objects.first()
-        if not trans and accept_jpkr:
-            return self.text_jpkr
+    def get_trans(self, accept_jpkr=False, accept_auto=False):
+        """ 적합한 번역 가져오기 """
 
-        return 'not translated yet'
+        trans: Translation = self.translations.annotate(Count('likes')).order_by('-created_at', '-likes__count').first()
+        if trans:
+            return trans.text
+
+        if accept_jpkr and self.text_jpkr:
+            return "(J)" + self.text_jpkr
+
+        if accept_auto and self.text_pp:
+            return "(P)" + self.text_pp
+
+        return None
 
     def to_json(self):
+        """ serialize object to json """
         return {
             'id': self.pk,
 
@@ -249,9 +273,11 @@ class Entry(models.Model):
         }
 
     def translations_json(self):
+        """ 번역 내용들을 json으로 변환 """
         return [trans.to_json() for trans in self.translations.order_by('created_at')]
 
     def to_json_text(self):
+        """ json을 텍스트로 변환 """
         return mark_safe(json.dumps(self.to_json(), ensure_ascii=False))
 
     hash_v1 = models.CharField('HashHex v1', max_length=70, db_index=True, null=True, blank=True)
@@ -271,7 +297,7 @@ class Entry(models.Model):
     )
     status = models.CharField('번역 상태', max_length=10, choices=TRANSLATE_STATUS, default='none')
 
-    created_at = models.DateTimeField('생성일', auto_now_add=True)
+    created_at = models.DateTimeField('생성일', auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField('수정일', auto_now=True)
 
     STATUS_HTML = {
@@ -281,13 +307,23 @@ class Entry(models.Model):
     }
 
     def status_html(self):
+        """ 번역 상태를 HTML로 표현 """
         return mark_safe(self.STATUS_HTML.get(self.status, 'Error!'))
 
     status_html.short_description = '번역상태'
 
+    def update_status(self):
+        """ 번역 상태 업데이트 """
+        if self.translations.exclude():
+            self.status = 'finished'
+        else:
+            self.status = 'none'
+
+        self.save()
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if update_fields and 'status' in update_fields:
-            self.entry.path.save()
+            self.path.update_status()
 
         super(Entry, self).save(force_insert, force_update, using, update_fields)
 
@@ -331,9 +367,7 @@ class Translation(models.Model):
     updated_at = models.DateTimeField('수정일', auto_now=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if self.entry.status != 'finished':
-            self.entry.status='finished'
-            self.entry.save()
+        self.entry.update_status()
 
         super(Translation, self).save(force_insert, force_update, using, update_fields)
 
@@ -538,13 +572,21 @@ class Patch(models.Model):
     def get_absolute_url(self):
         return self.file.url
 
+    @property
     def get_trans_percent(self):
         return f'{self.translated * 100 / self.items:.2f}'
 
+    @property
     def get_final_percent(self):
         return f'{self.finalized * 100 / self.items:.2f}'
 
     file = models.FileField('패치파일')
+
+    PATCH_TYPE_CHOICES = (
+        ('minimum', '최소 번역'),
+        ('full', '전체 번역')
+    )
+    patch_type = models.CharField('패치 종류', max_length=20, choices=PATCH_TYPE_CHOICES, default='full')
 
     translated = models.IntegerField('변역 완료 숫자', default=0)
     finalized = models.IntegerField('변역 확정 숫자', default=0)
@@ -566,19 +608,3 @@ class TelegramUser(models.Model):
     user = models.OneToOneField(get_user_model(), primary_key=True, related_name='telegram',
                                 on_delete=models.deletion.CASCADE)
     telegram_id = models.IntegerField("Telegram ID")
-
-
-# proxy
-
-class AreaEntity(Entity):
-    class Meta:
-        verbose_name = "지역"
-        verbose_name_plural = "지역 목록"
-        proxy = True
-
-
-class OtherEntity(Entity):
-    class Meta:
-        verbose_name = "번역 대상"
-        verbose_name_plural = "번역 대상 목록"
-        proxy = True

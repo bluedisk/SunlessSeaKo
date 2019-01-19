@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Noun, Patch, Discussion, Translation, Entry
 
 
-def nouns(requests):
+def nouns(_):
     nouns_dict = Noun.make_dict()
     result = [{'uid': '%04d' % key, 'value': values[2]} for key, values in nouns_dict.items()]
 
@@ -17,7 +17,10 @@ def nouns(requests):
 
 
 def home(request):
-    return render(request, "home.html", {"patch": Patch.objects.order_by('-created_at').first()})
+    return render(request, "home.html", {
+        "min_patch": Patch.objects.filter(patch_type='minimum').order_by('-created_at').first(),
+        "full_patch": Patch.objects.filter(patch_type='full').order_by('-created_at').first()
+    })
 
 
 def download(request, patch_id):

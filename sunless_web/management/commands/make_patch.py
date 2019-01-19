@@ -8,7 +8,7 @@ import datetime
 from io import BytesIO
 
 from django.core.management.base import BaseCommand
-from django.db.models import Q, Count, Sum
+from django.db.models import Count, Sum
 from django.utils import timezone
 
 from modules.log import TelegramLog, PrintLog
@@ -30,7 +30,7 @@ def get_updated(check_from):
     noun_updated = Noun.objects.filter(updated_at__gt=check_from).count()
     entity_updated = Entity.objects.filter(updated_at__gt=check_from).values('cate').annotate(cnt=Count('cate'))
 
-    return noun_updated, dict([(s['cate'], s['cnt']) for s in entity_updated])
+    return noun_updated, {e['cate']: e['cnt'] for e in entity_updated}
 
 
 def get_nouns():
@@ -63,13 +63,13 @@ def make_patch(nouns_dict):
     for cate in cates:
         trans_dict[cate.name] = {}
 
-    for e in Entity.objects.filter(cate__in=cates):
-        trans_dict[e.cate.name][e.hash] = {
-            'original': e.original or {},
-            'google': e.google or {},
-            'papago': e.papago or {},
-            'translate': e.translate or {},
-            'final': e.final or {}
+    for entity in Entity.objects.filter(cate__in=cates):
+        trans_dict[entity.cate.name][entity.hash] = {
+            'original': entity.original or {},
+            'google': entity.google or {},
+            'papago': entity.papago or {},
+            'translate': entity.translate or {},
+            'final': entity.final or {}
         }
 
     # load original
@@ -81,13 +81,14 @@ def make_patch(nouns_dict):
             print("Pass!")
             continue
 
-        with open(original_json_path, 'r') as f:
-            patch = json.load(f)
+        with open(original_json_path, 'r') as filed:
+            patch = json.load(filed)
 
         # # Replacing original text to translated
         updater = RecursiveUpdateProcessor()
         matched, unmatched = updater.process(cate.name, patch, trans_dict[cate.name], nouns_dict)
-        print('matched:', matched, ', \tunmatched:', unmatched, " \t Percent: ", matched * 100 / (matched + unmatched), "%")
+        print('matched:', matched, ', \tunmatched:', unmatched, " \t Percent: ", matched * 100 / (matched + unmatched),
+              "%")
 
         patches[cate.name] = patch
 
@@ -96,7 +97,6 @@ def make_patch(nouns_dict):
 
     buffer = BytesIO()
     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as myzip:
-        print("Save %s" % cate.name)
         for cate in cates:
             if cate.name not in patches:
                 print("Pass!")
@@ -168,10 +168,10 @@ class Command(BaseCommand):
                 ", ".join(updates))
 
         nouns = get_nouns()
-        patch = make_patch(nouns)
+        trans = get_trans()
+        patch = make_patch(nouns, trans)
 
         log.log("\n\n 파일 생성 완료! 파일 다운로드는 아래 링크를 이용해 주세요!\n" \
                 "--------------------------------------------\n" \
                 " https://sunless.eggpang.net%s" %
                 patch.get_absolute_url())
-

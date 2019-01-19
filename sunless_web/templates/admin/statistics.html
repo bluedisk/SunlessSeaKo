@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load admin_static %}
 {% load admin_urls %}
+{% load sunless %}
 
 {% block content %}
     <div class="row">
@@ -9,8 +10,8 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="card">
-                        <div class="card-header">
-                            진행 통계
+                        <div class="card-header bg-secondary">
+                            <strong>진행 통계</strong>
                         </div>
                         <div class="card-block">
                             <canvas id="progressChart" class="img-thumbnail"></canvas>
@@ -20,8 +21,8 @@
 
                 <div class="col-md-12">
                     <div class="card">
-                        <div class="card-header">
-                            번역 랭킹!!
+                        <div class="card-header bg-secondary">
+                            <strong>번역 랭킹!!</strong>
                         </div>
                         <div class="card-block">
                             <canvas id="rankChart" class="img-thumbnail"></canvas>
@@ -33,8 +34,8 @@
 
         <div class="col-md-4">
             <div class="card">
-                <div class="card-header">
-                    공지
+                <div class="card-header bg-secondary">
+                    <strong>공지</strong>
                 </div>
                 <div class="card-block">
                     <h4 class="card-title">Sunless Sea 한글화 작업</h4>
@@ -56,8 +57,8 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="card">
-                        <div class="card-header">
-                            {% trans 'Recent actions' %}
+                        <div class="card-header bg-secondary">
+                            <strong>{% trans 'Recent actions' %}</strong>
                         </div>
                         <div class="card-block">
                             <h4 class="card-title">{% trans 'My actions' %}</h4>
@@ -92,11 +93,24 @@
 
                 <div class="col-md-12">
                     <div class="card">
-                        <div class="card-header">
-                            최신 댓글
+                        <div class="card-header bg-secondary">
+                            <strong>최신 댓글</strong>
                         </div>
                         <div class="card-block">
-                            댓글 기능 추가 예정... 곧...
+                            {% get_recent as recent %}
+                            {% for discuss in recent %}
+                                <div class="row">
+                                    <div class="col-2">
+                                        <a href="{{ discuss.link }}" class="badge badge-secondary">#{{ discuss.entry }}</a>
+                                    </div>
+                                    <div class="col-2">
+                                        <span>{{ discuss.user }}</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <a href="{{ discuss.link }}">{{ discuss.summary }}</a>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -113,7 +127,6 @@
             integrity="sha256-CfcERD4Ov4+lKbWbYqXD6aFM9M51gN4GUEtDhkWABMo="
             crossorigin="anonymous"></script>
 
-    {% load sunless %}
     {% get_progress as progress %}
     <script>
         var ctx = document.getElementById("progressChart").getContext('2d');
@@ -123,7 +136,7 @@
                 labels: ["Nouns", "Events", "Qualities", "Exchanges", "Areas", "Personas"],
                 datasets: [
                 {
-                    label: ' % of Finalized',
+                    label: ' % of Partial',
                     data: {{ progress.1 }},
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.5)',
@@ -143,7 +156,7 @@
                     ],
                     borderWidth: 1
                 },{
-                    label: ' % of Translated',
+                    label: ' % of Finished',
                     data: {{ progress.0 }},
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.2)',

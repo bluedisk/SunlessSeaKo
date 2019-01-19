@@ -2,9 +2,8 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render
-from django.urls import reverse, path
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from django.utils.safestring import mark_safe
 from django.utils.encoding import force_text
@@ -17,10 +16,7 @@ from django.utils.translation import gettext as _
 
 from urllib.parse import parse_qsl
 
-from suit.widgets import AutosizedTextarea
-
-from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser, AreaEntity, \
-    OtherEntity, Entry, Translation, EntryPath, Discussion
+from .models import Entity, EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser, Entry, Translation, EntryPath, Discussion
 from mentions.widgets import ElasticTextarea, TranslateTextarea
 
 TRANS_HELP = None
@@ -288,18 +284,6 @@ class EntityAdmin(admin.ModelAdmin):
                 )
 
         return super(EntityAdmin, self).response_change(request, obj)
-
-
-@admin.register(AreaEntity)
-class AreaEntityAdmin(EntityAdmin):
-    def get_queryset(self, request):
-        return self.model.objects.filter(cate='areas')
-
-
-@admin.register(OtherEntity)
-class OtherEntityAdmin(EntityAdmin):
-    def get_queryset(self, request):
-        return self.model.objects.exclude(cate='areas')
 
 
 @admin.register(EntityCate)

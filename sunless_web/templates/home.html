@@ -1,12 +1,14 @@
 {% load static %}
 <html>
 <head>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css"
+          integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
-<title>
-Sunless Sea 한글화
-</title>
+    <title>
+        Sunless Sea 한글화
+    </title>
 </head>
 <body>
 <div class=" text-center">
@@ -15,30 +17,83 @@ Sunless Sea 한글화
 
     <a href="/work" class="btn btn-info"><i class="fas fa-ship"></i> 번역 작업하러 가기 </a>
 
-    <hr class="m-5" />
+    <hr class="m-5"/>
+    {% if min_patch %}
+    <h3 class="m-3">한글패치 최소버전 다운로드</h3>
+    {{ min_patch.created_at|date }} Ver. <br/><br/>
+    초벌번역 {{ min_patch.get_trans_percent }}%<br/>
+    최종번역 {{ min_patch.get_final_percent }}%<br/>
+    <a href="{% url 'download' min_patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
+    {% endif %}
 
-    <h3 class="m-3">한글패치 다운로드</h3>
-    {{ patch.created_at|date }} Ver. <br /><br />
-    초벌번역 {{ patch.get_trans_percent }}%<br />
-    최종번역 {{ patch.get_final_percent }}%<br />
-    <a href="{% url 'download' patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
+    {% if full_patch %}
+    <h3 class="m-3">한글패치 기계번역 포함 풀 버전 다운로드</h3>
+    {{ full_patch.created_at|date }} Ver. <br/><br/>
+    초벌번역 {{ full_patch.get_trans_percent }}%<br/>
+    최종번역 {{ full_patch.get_final_percent }}%<br/>
+    <a href="{% url 'download' full_patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
+    {% endif %}
 
-    <hr class="m-5" />
+</div>
+<hr class="m-5"/>
 
-    <h3 class="m-3">번역 작업 안내</h3>
-    <iframe style="border: 1px solid black" src="https://docs.google.com/document/d/e/2PACX-1vTw3ySXjIJcWwOrrAMFPgws5jjKyF8SO7vKKlFSWfSAjTWdBGPdo3wvm1SjT8NwC_n_aPQWXr8Ss4xC/pub?embedded=true" frameborder="0" id="iframe" width="600px"></iframe>
+<div class="container">
+<h3 class="mb-4">간략 설치 방법 안내(일본 변역팀 작성)</h3>
+    <div class="card bg-light p-4 mb-4">한국팀주: 번역 방법과 설정 법에 대해서 일본 번역팀 작업을 참고 했습니다.<br />
+        We have referenced translations that the Japanese team had been doing. So, Thank you, Japanese guys! </div>
+    <h5>Windows</h5>
+    <pre>
+■ 먼저 번 게임을 시작 뉴 게임에서 게임을 시작하고 닫기
+(벌써 시작한 적이있는 사람은이 단계를 건너 뜁니다)
+
+■ sunless_sea_ko_xxxxxxxx 폴더 아래에 폴더별로 복사
+· C : \ Users \ (사용자 이름) \ AppData \ LocalLow \ Failbetter Games \ Sunless Sea \ addon
+(AppData이 발견되지 않는 경우 숨김 파일을 표시하도록 설정을 변경하십시오)
+
+    </pre>
+
+    <h5>Mac (정보 제공 : Taku 씨)</h5>
+    <pre>
+■ 준비
+한국어 패치 파일을 넣어야은 일반적으로 숨겨진 폴더가있어 보이지 않기 때문에 사전에 보이게합니다.
+
+키보드 바로 가기
+command + shift + (도트)
+※ 다시 누르면 숨기기로 돌아 가기
+
+패치 작업이 끝나면 숨겨진 폴더가 보이는 설정은 해제하십시오
+
+■ sunless_sea_ko_xxxxxxxx 폴더 아래에 폴더별로 복사
+HDD (이름) / User / (사용자 이름) / Library / Application Support / unity.Failbetter Games.Sunless Sea / addon /
+
+※ Application Support 폴더는 2 군데 있으므로 주의
+◯ HDD (이름) / User / (사용자 이름) / 라이브러리 / Application Support /
+× (HDD 명) / Library / Application Support /
+</pre>
+<hr class="m-5"/>
+
+<h3 class="m-3">번역 작업 안내</h3>
+<iframe style="border: 1px solid black"
+        src="https://docs.google.com/document/d/e/2PACX-1vTw3ySXjIJcWwOrrAMFPgws5jjKyF8SO7vKKlFSWfSAjTWdBGPdo3wvm1SjT8NwC_n_aPQWXr8Ss4xC/pub?embedded=true"
+        frameborder="0" id="iframe" width="100%"></iframe>
 
 
 </div>
 </body>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
 <script>
-        var valueSize = $( "#iframe" ).offset();
-        var totalsize = (valueSize.top * 2) + valueSize.left;
+    var valueSize = $("#iframe").offset();
+    var totalsize = (valueSize.top * 2) + valueSize.left;
 
-        $( "#iframe" ).height(totalsize);
+    $("#iframe").height(totalsize);
 
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
+        integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
+        crossorigin="anonymous"></script>
 </html>

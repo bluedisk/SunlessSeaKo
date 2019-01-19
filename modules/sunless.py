@@ -1,16 +1,17 @@
-import hashlib
+"""
+utilities for make fetch or extract data from json
+"""
 import re
-import sys
-from pprint import pprint
+from abc import ABCMeta, abstractmethod
 
 import hgtk
 
-from sunless_web.models import Entity
+from sunless_web.models import Entity, Entry
 
 EXCLUDE_OBJECTS = (
     # events
-    'LinkToEvent', 'Deck', 'LimitedToArea', 
-    'QualitiesAffected', 'QualitiesRequired', 
+    'LinkToEvent', 'Deck', 'LimitedToArea',
+    'QualitiesAffected', 'QualitiesRequired',
     'Setting', 'SwitchToSetting',
 
     # exchange
@@ -23,24 +24,29 @@ EXCLUDE_OBJECTS = (
 )
 
 
-class RecursiveProcessor:
+class RecursiveProcessor(metaclass=ABCMeta):
+    """ 계층적인 구조의 데이터 처리를 위한 프로세서"""
     def __init__(self):
         self.processed = 0
         self.notprocessed = 0
-        
+
+    @abstractmethod
     def process(self, root, *args, **kwargs):
+        """ 처리 시작점 """
         self.processed = 0
         self.notprocessed = 0
-        
+
         self._recusive_process(root, 'root')
-        
+
         return self.processed, self.notprocessed
-    
+
+    @abstractmethod
     def _process_node(self, node, parent):
+        """ 실제 데이터 처리 부 """
         return False
 
     def _recusive_process(self, node, parent):
-        if type(node) == dict:
+        if isinstance(node, dict):
             if node.get('Id', None) and (
                     (node.get('Name', None) and node['Name'].strip()) or
                     (node.get('Teaser', None) and node['Teaser'].strip()) or
@@ -51,23 +57,24 @@ class RecursiveProcessor:
                 else:
                     self.notprocessed += 1
 
-            for k, v in node.items():
-                if k not in EXCLUDE_OBJECTS:
-                    self._recusive_process(v, k)
+            for key, value in node.items():
+                if key not in EXCLUDE_OBJECTS:
+                    self._recusive_process(value, key)
 
-        elif type(node) == list:
+        elif isinstance(node, list):
             for item in node:
                 self._recusive_process(item, parent)
 
 
 class RecursiveUpdateProcessor(RecursiveProcessor):
+    """ 데이터 업데이트를 위한 프로세서 """
 
     def __init__(self):
         super(RecursiveUpdateProcessor, self).__init__()
         self.trans_dict = {}
         self.nouns_dict = {}
         self.cate = ''
-        self.noun_format = re.compile('(.*?)\!N(\d{4})\!(.*?)')
+        self.noun_format = re.compile(r'(.*?)!N(\d{4})!(.*?)')
         self.left_word = re.compile(r"[\w']+")
 
     def get_best_trans(self, trans, field):
@@ -109,7 +116,7 @@ class RecursiveUpdateProcessor(RecursiveProcessor):
         return super(RecursiveUpdateProcessor, self).process(root, *args, **kwargs)
 
     def _process_node(self, node, parent):
-        key = Entity.make_hash(self.cate, parent, node['Id'])
+        key = Entry.make_hash(self.cate, parent, node['Id'])
         trans = self.trans_dict.get(key, None)
         if not trans:
             print("Not matched hash", key, self.cate, parent, node['Id'])
@@ -128,4 +135,3 @@ class RecursiveUpdateProcessor(RecursiveProcessor):
             node['Teaser'] = teaser_filler
 
         return True
-
