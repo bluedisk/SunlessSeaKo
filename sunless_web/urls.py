@@ -26,9 +26,12 @@ urlpatterns = [
     path('nouns/', views.nouns),
     path('download/<int:patch_id>/', views.download, name='download'),
 
+    path('api/entry/<int:entry_id>/', views.get_entry, name='entry'),
     path('api/like/<str:action>/<str:target_type>/<int:target_id>/', views.like, name='like'),
     path('api/translate/<str:entry_id>/', views.add_translate, name='add_translate'),
     path('api/discuss/<str:translate_id>/', views.add_discuss, name='add_discuss'),
+    path('api/translate/delete/<str:trans_id>/', views.del_translate, name='del_translate'),
+    path('api/discuss/delete/<str:discuss_id>/', views.del_discuss, name='del_discuss'),
 
     path('', views.home)
 ]

@@ -12,7 +12,7 @@ from io import BytesIO
 import hgtk
 import tqdm
 from django.core.management.base import BaseCommand
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.utils import timezone
 
 from modules.log import TelegramLog, PrintLog
@@ -213,7 +213,7 @@ class Command(BaseCommand):
             min_patch = Patch()
             min_patch.patch_type = 'minimum'
             min_patch.items = Entry.objects.count()
-            min_patch.translated = Entry.objects.filter(status='partial').count()
+            min_patch.translated = 0
             min_patch.finalized = Entry.objects.filter(status='finished').count()
             min_patch.file.save("sunless_sea_ko_min_%s.zip" % timezone.localtime().strftime('%Y%m%d'), min_patch_data, save=False)
             min_patch.save()
@@ -221,8 +221,8 @@ class Command(BaseCommand):
             full_patch = Patch()
             full_patch.patch_type = 'full'
             full_patch.items = Entry.objects.count()
-            full_patch.translated = Entry.objects.filter(status='partial').count()
-            full_patch.finalized = Entry.objects.filter(status='finished').count()
+            full_patch.translated = 0
+            full_patch.finalized = Entry.objects.filter(Q(status='finished')|Q(text_jpkr__isnull=False)|Q(text_pp__isnull=False)).count()
             full_patch.file.save("sunless_sea_ko_full_%s.zip" % timezone.localtime().strftime('%Y%m%d'), full_patch_data, save=False)
             full_patch.save()
 

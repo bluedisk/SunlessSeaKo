@@ -316,6 +316,7 @@ class NounAdmin(admin.ModelAdmin):
     list_display = ['cate_safe', 'name', 'reference', 'papago', 'translate', 'final'] # 'google',
     list_display_links = ['name']
     list_editable = ['reference',  'papago', 'translate', 'final'] # 'google',
+    list_filter = ('cate',)
 
     search_fields = ['name', 'papago', 'translate', 'final']
 
@@ -383,10 +384,10 @@ class EntryInline(admin.StackedInline):
 class EntryPathAdmin(admin.ModelAdmin):
     inlines = (EntryInline, )
     readonly_fields = ('name', )
-    search_fields = ("name",)
+    search_fields = ("name", "entries__text_en", "entries__text_jpkr", "entries__translations__text")
 
     list_display = ('name', 'status', 'entry_count')
-    list_filter = ('status', )
+    list_filter = ('status', 'cate')
 
     change_form_template = "admin/translate.html"
 
@@ -415,7 +416,7 @@ class EntryAdmin(admin.ModelAdmin):
     inlines = (TranslationInline, )
 
     list_display = ('hash_v2', 'fullpath', 'summary')
-    list_filter = ('status',)
+    list_filter = ('status', 'path__cate')
 
     search_fields = ['basepath', 'object', 'hash_v1', 'hash_v2', 'text_en']
     readonly_fields = ['hash_v1', 'hash_v2', 'checker', 'text_en',

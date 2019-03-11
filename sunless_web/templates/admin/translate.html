@@ -4,7 +4,9 @@
 {% block extrastyle %}
     {{ block.super }}
     <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
-
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css"
+          integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Nanum+Gothic" rel="stylesheet">
 
     <link type="text/css" rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
     <link type="text/css" rel="stylesheet" href="/static/jquery-mentions/jquery.mentions.css"/>
@@ -15,8 +17,9 @@
     {% verbatim %}
     <div id="app">
         <b-card-group deck>
-            <entry v-for="entry in entries" :key="entry.id" :item="entry"></entry>
+            <entry v-for="entry_id in entry_ids" :key="entry_id" :pk="entry_id"></entry>
         </b-card-group>
+
     </div>
     {% endverbatim %}
 
@@ -27,26 +30,33 @@
     {% verbatim %}
     <script id="template-entry" type="template/vuejs">
         <b-card>
-            <h6 slot="header" class="mb-0 text-gray-dark">#{{ item.id }} / {{ item.object }}</h6>
-
-            <div class="mb-3"><strong>원문</strong><br/>{{ item.text_en }}<br/></div>
-            <div class="mb-3" v-if="item.text_jpkr"><strong>일본어</strong><br/> {{ item.text_jpkr }}<br/></div>
-            <div class="mb-3" v-if="item.text_pp"><strong>파파고</strong><br/> <span v-html="item.text_pp"></span><br/>
+            <div v-if="!this.loaded">
+                <h2>... 로딩 중: #E{{ this.pk }} ...</h2>
             </div>
-            <hr/>
+            <div v-if="this.loaded">
+                <h6 slot="header" class="mb-0 text-gray-dark">#T{{ item.id }} / {{ item.object }}</h6>
 
-            <div class="">
-                <h5>번역</h5>
-                <translate v-for="trans in item.translations" :key="trans.id" :item="trans"></translate>
-                <p v-if="!item.translations.length" class="text-muted">## 번역이 없습니다 ##</p>
-                <comment-box text="번역 추가하기" is-mention="true" post-type="translate"
-                             @upload="postTranslate"></comment-box>
+                <div class="mb-3"><strong>원문</strong><br/>{{ item.text_en }}<br/></div>
+                <div class="mb-3" v-if="item.text_jpkr"><strong>일본어</strong><br/> {{ item.text_jpkr }}<br/></div>
+                <div class="mb-3" v-if="item.text_pp"><strong>파파고</strong><br/> <span v-html="item.text_pp"></span><br/>
+                </div>
+                <hr/>
+
+                <div class="">
+                    <h5>번역</h5>
+                    <translate v-for="trans in item.translations" :key="trans.id" :item="trans" @reload="reload"></translate>
+                    <p v-if="!item.translations.length" class="text-muted">## 번역이 없습니다 ##</p>
+                    <comment-box text="번역 추가하기" is-mention="true" post-type="translate"
+                                 @upload="postTranslate" ref="comment"></comment-box>
+                </div>
+                <hr/>
             </div>
-            <hr/>
         </b-card>
     </script>
+
     <script id="template-discuss" type="template/vuejs">
         <div class="mb-2">
+            ㄴ
             <span class="mb-0 discuss-name"><strong>{{ item.user }}</strong></span>
             <b-badge variant="light">{{ item.created_at }}</b-badge>
             <b-button v-if="my" variant="link" class="text-danger" @click="deleteMe">삭제</b-button>
@@ -56,6 +66,7 @@
             </div>
         </div>
     </script>
+
     <script id="template-trans" type="template/vuejs">
         <div>
             <div class="mb-1">
@@ -63,7 +74,6 @@
                 <span v-if="item.user != 'unknown'"><strong>{{ item.user }}</strong></span>
                 <b-badge variant="light">{{ item.created_at }}</b-badge>
                 <b-button v-if="my" variant="link" class="text-danger" @click="deleteMe">삭제</b-button>
-
                 <div class="float-right">
                     <likes :likes="item.likes" type="trans" :pk="item.id"></likes>
 
@@ -80,17 +90,18 @@
                 </div>
             </div>
             <div class="mb-3 ml-4">
-                <discuss v-for="discuss in item.discusses" :key="discuss.id" :item="discuss"></discuss>
+                <discuss v-for="discuss in item.discusses" :key="discuss.id" :item="discuss" @reload="$emit('reload')"></discuss>
 
                 <div v-if="!this.writting && item.discusses.length != 0" class="clearfix">
                     <b-button class="mb-0 p-0" variant="link" @click="enableWrite">댓글 달기</b-button>
                 </div>
 
                 <comment-box v-if="this.writting" text="의견 추가하기" is-mention="false" post-type="discuss"
-                             @upload="postComment"></comment-box>
+                             @upload="postComment" ref="comment"></comment-box>
             </div>
         </div>
     </script>
+
     <script id="template-likes" type="template/vuejs">
         <b-button size="sm" :variant="this.variant" @click.prevent="toggle">좋아요
             <b-badge variant="light">
@@ -98,10 +109,12 @@
             </b-badge>
         </b-button>
     </script>
+
     <script id="template-comment-box" type="template/vuejs">
         <div class="clearfix mb-4">
             <b-form-group>
-                <textarea :class="{'form-control': true, mentions: isMention, 'js-elasticArea':true}" v-model="content"
+                <textarea ref="textarea" :class="{'form-control': true, mentions: isMention, 'js-elasticArea':true}"
+                          v-model="content"
                           placeholder="Enter new translation"></textarea>
             </b-form-group>
             <b-button variant="outline-primary" class="float-right" @click.prevent="upload">{{ this.text }}</b-button>
@@ -126,21 +139,45 @@
 
         /* global Vue */
         Vue.component('entry', {
-            props: ['item'],
+            props: ['pk'],
+            data: function () {
+                return {
+                    loaded: false,
+                    'item': {
+                        translations: []
+                    }
+                }
+            },
             template: document.getElementById('template-entry').innerText,
+            created: function () {
+                this.reload()
+            },
             methods: {
                 postTranslate: function (content) {
                     var entry = this;
 
-                    axios.post("/" + ["api", "translate", this.item.id].join("/") + "/", content)
+                    axios.post("/" + ["api", "translate", this.pk].join("/") + "/", content)
                         .then(function (res) {
                             console.log("post translate result");
 
                             if (res.status === 200) {
                                 entry.item.translations = res.data.translations;
+                                this.$refs.comment.reset();
                             } else {
                                 console.error(res);
                             }
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                        });
+                },
+                reload: function () {
+                    var self = this;
+
+                    axios.get("/" + ["api", "entry", this.pk].join("/") + "/")
+                        .then(function (res) {
+                            self.item = res.data;
+                            self.loaded = true;
                         })
                         .catch(function (error) {
                             console.error(error);
@@ -153,7 +190,9 @@
             props: ['item'],
             data: function () {
                 return {
-                    writting: false
+                    writting: false,
+                    showError: false,
+                    showWarning: false
                 }
             },
             template: document.getElementById('template-trans').innerText,
@@ -163,6 +202,7 @@
                 },
                 postComment: function (content) {
                     var translate = this;
+                    console.log(this);
 
                     axios.post("/" + ["api", "discuss", this.item.id].join("/") + "/", content)
                         .then(function (res) {
@@ -170,6 +210,7 @@
 
                             if (res.status === 200) {
                                 translate.item.discusses = res.data.discusses;
+                                translate.$refs.comment.reset();
                             } else {
                                 console.error(res);
                             }
@@ -178,12 +219,29 @@
                             console.error(error);
                         });
                 },
-                deleteMe: function() {
-                    alert("개발 중.. 쏴리...");
+                deleteMe: function () {
+{#                    if (this.item.discusses.length) {#}
+{#                        alert("댓들이 있는 번역은 삭제될 수 없습니다! (관리자에게 문의해주세요!)");#}
+{#//                        this.showError = true;#}
+{#                    } else {#}
+                        var self = this;
+                        axios.post("/" + ["api", "translate", "delete", this.item.id].join("/") + "/", content)
+                            .then(function (res) {
+                                if (res.status === 200) {
+                                    self.$emit('reload');
+                                } else {
+                                    console.error(res);
+                                }
+                            })
+                            .catch(function (error) {
+                                console.error(error);
+                            });
+//                        this.showWarning = true;
+{#}#}
                 }
             },
             computed: {
-                my: function() {
+                my: function () {
                     return this.item.user === '{{ request.user.username }}';
                 }
             }
@@ -193,12 +251,20 @@
             props: ['item'],
             template: document.getElementById('template-discuss').innerText,
             methods: {
-                deleteMe: function() {
-                    alert("개발 중.. 쏴리...");
+                deleteMe: function () {
+                    var self = this;
+                    axios.post("/" + ["api", "discuss", "delete", this.item.id].join("/") + "/", content)
+                        .then(function (res) {
+                            if (res.status === 200) {
+                                self.$emit('reload');
+                            } else {
+                                console.error(res);
+                            }
+                        })
                 }
             },
             computed: {
-                my: function() {
+                my: function () {
                     return this.item.user === '{{ request.user.username }}';
                 }
             }
@@ -227,7 +293,7 @@
                     if (this.likesProxy.indexOf(userPk) !== -1) action = "unlike";
 
                     var parent = this;
-                    axios.get("/" + ["api", "like", action, this.type, this.id].join("/") + "/")
+                    axios.get("/" + ["api", "like", action, this.type, this.pk].join("/") + "/")
                         .then(function (res) {
                             parent.likesProxy = res.data;
                         })
@@ -248,10 +314,20 @@
             template: document.getElementById('template-comment-box').innerText,
             methods: {
                 upload: function () {
+                    var content = '';
+
+                    if (this.isMention === 'true') {
+                        content = $(this.$refs.textarea).mentionsInput('getValue');
+                    } else {
+                        content = this.$refs.textarea.value;
+                    }
                     this.$emit('upload', {
                         postType: this.postType,
-                        postData: this.content
+                        postData: content
                     });
+                },
+                reset: function () {
+                    this.$refs.textarea.value = '';
                 }
             }
         });
@@ -259,7 +335,8 @@
         new Vue({
             el: '#app',
             data: {
-                entries: {{ adminform.form.instance.to_json_text }}
+                entry_ids: {{ adminform.form.instance.to_id_json_text }},
+                showModal: false
             }
         });
 

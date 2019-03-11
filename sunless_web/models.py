@@ -160,8 +160,8 @@ class EntryPath(models.Model):
 
         return entries
 
-    def to_json_text(self):
-        return mark_safe(json.dumps(self.to_json(), ensure_ascii=False))
+    def to_id_json_text(self):
+        return mark_safe(json.dumps([e.id for e in self.entries.all()], ensure_ascii=False))
 
     def entry_count(self):
         return self.entries.count()
@@ -314,7 +314,7 @@ class Entry(models.Model):
 
     def update_status(self):
         """ 번역 상태 업데이트 """
-        if self.translations.exclude():
+        if self.translations.exists():
             self.status = 'finished'
         else:
             self.status = 'none'
@@ -322,13 +322,14 @@ class Entry(models.Model):
         self.save()
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(Entry, self).save(force_insert, force_update, using, update_fields)
         if update_fields and 'status' in update_fields:
             self.path.update_status()
 
-        super(Entry, self).save(force_insert, force_update, using, update_fields)
-
 
 class Translation(models.Model):
+    """ 번역 내용들 """
+
     class Meta:
         verbose_name = '번역'
         verbose_name_plural = '번역 목록'
@@ -342,6 +343,7 @@ class Translation(models.Model):
         return f"Someone#{self.pk}"
 
     def to_json(self):
+        """ json 으로 덤프하기  """
         return {
             'id': self.pk,
             'user': self.user.username if self.user else 'System',
@@ -354,7 +356,6 @@ class Translation(models.Model):
 
     @property
     def html(self):
-        nouns = cache.get("noun_dict") or Noun.make_dict()
         return mark_safe(Noun.nid_to_html(self.text))
 
     user = models.ForeignKey(get_user_model(), related_name="translations", on_delete=models.SET_NULL, null=True)
@@ -367,9 +368,8 @@ class Translation(models.Model):
     updated_at = models.DateTimeField('수정일', auto_now=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        self.entry.update_status()
-
         super(Translation, self).save(force_insert, force_update, using, update_fields)
+        self.entry.update_status()
 
 
 class Discussion(models.Model):

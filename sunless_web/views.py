@@ -2,7 +2,7 @@ import json
 from json import JSONDecodeError
 
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import JsonResponse, HttpResponseRedirect, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponseBadRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
@@ -66,7 +66,7 @@ def add_translate(request, entry_id):
         trans = Translation()
         trans.entry = entry
         trans.user = request.user
-        trans.text = data['postData']
+        trans.text = Noun.mention_to_nid(data['postData'])
         trans.save()
     else:
         return HttpResponseBadRequest()
@@ -95,3 +95,27 @@ def add_discuss(request, translate_id):
         return HttpResponseBadRequest()
 
     return JsonResponse(translate.to_json(), safe=False)
+
+
+@staff_member_required
+def get_entry(request, entry_id):
+    entry = get_object_or_404(Entry, pk=entry_id)
+    return JsonResponse(entry.to_json(), safe=False)
+
+
+@csrf_exempt
+@staff_member_required
+def del_translate(request, trans_id):
+    trans = get_object_or_404(Translation, pk=trans_id)
+    trans.delete()
+
+    return HttpResponse('ok')
+
+
+@csrf_exempt
+@staff_member_required
+def del_discuss(request, discuss_id):
+    discuss = get_object_or_404(Discussion, pk=discuss_id)
+    discuss.delete()
+
+    return HttpResponse('ok')

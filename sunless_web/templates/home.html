@@ -20,17 +20,15 @@
     <hr class="m-5"/>
     {% if min_patch %}
     <h3 class="m-3">한글패치 최소버전 다운로드</h3>
-    {{ min_patch.created_at|date }} Ver. <br/><br/>
-    초벌번역 {{ min_patch.get_trans_percent }}%<br/>
-    최종번역 {{ min_patch.get_final_percent }}%<br/>
+    {{ min_patch.created_at|date }} Ver. <br/>
+    번역률 {{ min_patch.get_final_percent }}%<br/>
     <a href="{% url 'download' min_patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
     {% endif %}
 
     {% if full_patch %}
     <h3 class="m-3">한글패치 기계번역 포함 풀 버전 다운로드</h3>
-    {{ full_patch.created_at|date }} Ver. <br/><br/>
-    초벌번역 {{ full_patch.get_trans_percent }}%<br/>
-    최종번역 {{ full_patch.get_final_percent }}%<br/>
+    {{ full_patch.created_at|date }} Ver. <br/>
+    번역률 {{ full_patch.get_final_percent }}%<br/>
     <a href="{% url 'download' full_patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
     {% endif %}
 
