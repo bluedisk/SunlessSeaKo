@@ -113,7 +113,7 @@ def make_patch(trans_dict):
     # make data
     def process_replace(hashkey, value):
         if hashkey in trans_dict:
-            return trans_dict[hashkey].replace('\x00', ' ')
+            return trans_dict[hashkey].replace('\x00', ' ').replace('\n', '\r\n')
 
         return value
 
@@ -148,8 +148,8 @@ class Command(BaseCommand):
             print("Log to group %s" % config['botGroupId'])
             log = TelegramLog(config['botToken'], config['botGroupId'])
 
-        if not options['pre-check']:
-            log.log("오늘도 좋은 하루! 썬리스 씨봇입니다!\n 😛 오늘 버전 🇰🇷 패치 제작을 시작합니다!")
+        # if not options['pre-check']:
+        #     log.log("오늘도 좋은 하루! 썬리스 씨봇입니다!\n 😛 오늘 버전 🇰🇷 패치 제작을 시작합니다!")
 
         lastest = get_lastest_patch()
         if lastest:
@@ -179,8 +179,8 @@ class Command(BaseCommand):
         for key, val in entity_updated.items():
             updates.append("%s에서 %s개" % (key, val))
 
-        log.log("%s가 변경 되었습니다! 👍\n\n 🔊 처리를 시작합니다 지기지기~ 우우우웅~~ 둠칫둠칫~ 🔊\n " %
-                ", ".join(updates))
+        # log.log("%s가 변경 되었습니다! 👍\n\n 🔊 처리를 시작합니다 지기지기~ 우우우웅~~ 둠칫둠칫~ 🔊\n " %
+        #         ", ".join(updates))
 
         nouns = get_nouns()
 
@@ -227,8 +227,8 @@ class Command(BaseCommand):
             full_patch.save()
 
             log.log("""
-    
+    %s가 변경 되었습니다! 👍👍
     파일 생성 완료! 파일 다운로드는 아래 링크를 이용해 주세요!
     --------------------------------------------
     최소버전 : https://sunless.eggpang.net%s
-    풀버전: https://sunless.eggpang.net%s""" % (min_patch.get_absolute_url(), full_patch.get_absolute_url()))
+    풀버전: https://sunless.eggpang.net%s""" % (", ".join(updates), min_patch.get_absolute_url(), full_patch.get_absolute_url()))
