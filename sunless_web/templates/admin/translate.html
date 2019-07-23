@@ -44,7 +44,8 @@
 
                 <div class="">
                     <h5>번역</h5>
-                    <translate v-for="trans in item.translations" :key="trans.id" :item="trans" @reload="reload"></translate>
+                    <translate v-for="trans in item.translations" :key="trans.id" :item="trans"
+                               @reload="reload"></translate>
                     <p v-if="!item.translations.length" class="text-muted">## 번역이 없습니다 ##</p>
                     <comment-box text="번역 추가하기" is-mention="true" post-type="translate"
                                  @upload="postTranslate" ref="comment"></comment-box>
@@ -90,7 +91,8 @@
                 </div>
             </div>
             <div class="mb-3 ml-4">
-                <discuss v-for="discuss in item.discusses" :key="discuss.id" :item="discuss" @reload="$emit('reload')"></discuss>
+                <discuss v-for="discuss in item.discusses" :key="discuss.id" :item="discuss"
+                         @reload="$emit('reload')"></discuss>
 
                 <div v-if="!this.writting && item.discusses.length != 0" class="clearfix">
                     <b-button class="mb-0 p-0" variant="link" @click="enableWrite">댓글 달기</b-button>
@@ -128,7 +130,9 @@
     <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
     <script src="//unpkg.com/axios/dist/axios.min.js"></script>
 
-    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="/static/jquery-mentions/jquery.mentions.js"></script>
     <script src="/static/js/translate.js"></script>
@@ -220,32 +224,32 @@
                         });
                 },
                 deleteMe: function () {
-{#                    if (this.item.discusses.length) {#}
-{#                        alert("댓들이 있는 번역은 삭제될 수 없습니다! (관리자에게 문의해주세요!)");#}
-{#//                        this.showError = true;#}
-{#                    } else {#}
-                        var self = this;
-                        axios.post("/" + ["api", "translate", "delete", this.item.id].join("/") + "/", content)
-                            .then(function (res) {
-                                if (res.status === 200) {
-                                    self.$emit('reload');
-                                } else {
-                                    console.error(res);
-                                }
-                            })
-                            .catch(function (error) {
-                                console.error(error);
-                            });
+                    {#                    if (this.item.discusses.length) {#}
+                    {#                        alert("댓들이 있는 번역은 삭제될 수 없습니다! (관리자에게 문의해주세요!)");#}
+                    {#//                        this.showError = true;#}
+                    {#                    } else {#}
+                    var self = this;
+                    axios.post("/" + ["api", "translate", "delete", this.item.id].join("/") + "/", content)
+                        .then(function (res) {
+                            if (res.status === 200) {
+                                self.$emit('reload');
+                            } else {
+                                console.error(res);
+                            }
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                        });
 //                        this.showWarning = true;
-{#}#}
+                    {#}#}
+                    }
+                },
+                computed: {
+                    my: function () {
+                        return this.item.user === '{{ request.user.username }}';
+                    }
                 }
-            },
-            computed: {
-                my: function () {
-                    return this.item.user === '{{ request.user.username }}';
-                }
-            }
-        });
+            });
 
         Vue.component('discuss', {
             props: ['item'],

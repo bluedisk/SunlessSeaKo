@@ -19,26 +19,27 @@
 
     <hr class="m-5"/>
     {% if min_patch %}
-    <h3 class="m-3">한글패치 최소버전 다운로드</h3>
-    {{ min_patch.created_at|date }} Ver. <br/>
-    번역률 {{ min_patch.get_final_percent }}%<br/>
-    <a href="{% url 'download' min_patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
+        <h3 class="m-3">한글패치 최소버전 다운로드</h3>
+        {{ min_patch.created_at|date }} Ver. <br/>
+        번역률 {{ min_patch.get_final_percent }}%<br/>
+        <a href="{% url 'download' min_patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
     {% endif %}
 
     {% if full_patch %}
-    <h3 class="m-3">한글패치 기계번역 포함 풀 버전 다운로드</h3>
-    {{ full_patch.created_at|date }} Ver. <br/>
-    번역률 {{ full_patch.get_final_percent }}%<br/>
-    <a href="{% url 'download' full_patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
+        <h3 class="m-3">한글패치 기계번역 포함 풀 버전 다운로드</h3>
+        {{ full_patch.created_at|date }} Ver. <br/>
+        번역률 {{ full_patch.get_final_percent }}%<br/>
+        <a href="{% url 'download' full_patch.pk %}" class="btn btn-primary m-3">다운로드!</a>
     {% endif %}
 
 </div>
 <hr class="m-5"/>
 
 <div class="container">
-<h3 class="mb-4">간략 설치 방법 안내(일본 변역팀 작성)</h3>
-    <div class="card bg-light p-4 mb-4">한국팀주: 번역 방법과 설정 법에 대해서 일본 번역팀 작업을 참고 했습니다.<br />
-        We have referenced translations that the Japanese team had been doing. So, Thank you, Japanese guys! </div>
+    <h3 class="mb-4">간략 설치 방법 안내(일본 변역팀 작성)</h3>
+    <div class="card bg-light p-4 mb-4">한국팀주: 번역 방법과 설정 법에 대해서 일본 번역팀 작업을 참고 했습니다.<br/>
+        We have referenced translations that the Japanese team had been doing. So, Thank you, Japanese guys!
+    </div>
     <h5>Windows</h5>
     <pre>
 ■ 먼저 번 게임을 시작 뉴 게임에서 게임을 시작하고 닫기
@@ -68,18 +69,18 @@ HDD (이름) / User / (사용자 이름) / Library / Application Support / unity
 ◯ HDD (이름) / User / (사용자 이름) / 라이브러리 / Application Support /
 × (HDD 명) / Library / Application Support /
 </pre>
-<hr class="m-5"/>
+    <hr class="m-5"/>
 
-<h3 class="m-3">번역 작업 안내</h3>
-<iframe style="border: 1px solid black"
-        src="https://docs.google.com/document/d/e/2PACX-1vTw3ySXjIJcWwOrrAMFPgws5jjKyF8SO7vKKlFSWfSAjTWdBGPdo3wvm1SjT8NwC_n_aPQWXr8Ss4xC/pub?embedded=true"
-        frameborder="0" id="iframe" width="100%"></iframe>
+    <h3 class="m-3">번역 작업 안내</h3>
+    <iframe style="border: 1px solid black"
+            src="https://docs.google.com/document/d/e/2PACX-1vTw3ySXjIJcWwOrrAMFPgws5jjKyF8SO7vKKlFSWfSAjTWdBGPdo3wvm1SjT8NwC_n_aPQWXr8Ss4xC/pub?embedded=true"
+            frameborder="0" id="iframe" width="100%"></iframe>
 
 
 </div>
 </body>
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
         crossorigin="anonymous"></script>
 <script>
     var valueSize = $("#iframe").offset();
