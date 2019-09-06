@@ -111,7 +111,7 @@ def make_patch(trans_dict):
     """ 한글 패치를 생성한다 """
 
     # make data
-    def process_replace(hashkey, value):
+    def process_replace(hashkey, _, value):
         if hashkey in trans_dict:
             return trans_dict[hashkey].replace('\x00', ' ').replace('\n', '\r\n')
 

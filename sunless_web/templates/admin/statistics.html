@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-header bg-secondary">
                     <strong>공지</strong>
@@ -43,53 +43,53 @@
                         <img src="{%  static 'images/main.jpg' %}" class="img-thumbnail" />
                     </div>
                     <p class="card-text">
-                        일본 친구들의 번역을 땡겨오는 작업이 진행 중입니다.<br />
-                        번역 작업은 기존 그대로 진행하셔도 됩니다.
+                        일본친구들 생유~<br/>
+                        원문 업데이트 된 내역은 우측 댓글 참고요 =>
                     </p>
                     <p></p>
-                    <a href="{% url 'admin:sunless_web_entity_changelist' %}?amicheck=notyet" class="btn btn-primary btn-block">번역하러 가기!</a>
+{#                    <a href="{% url 'admin:sunless_web_entity_changelist' %}?amicheck=notyet" class="btn btn-primary btn-block">번역하러 가기!</a>#}
                     <a href="https://github.com/bluedisk/SunlessSeaKo" class="btn btn-default btn-block" target="_blank">View on github</a>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-5">
             <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header bg-secondary">
-                            <strong>{% trans 'Recent actions' %}</strong>
-                        </div>
-                        <div class="card-block">
-                            <h4 class="card-title">{% trans 'My actions' %}</h4>
-                        </div>
-                        <div class="card-text" style="overflow: hidden;">
-                            {% load log %}
-                            {% get_admin_log 5 as admin_log for_user user %}
-                            {% if not admin_log %}
-                            <p>{% trans 'None available' %}</p>
-                            {% else %}
-                            <ul class="actionlist">
-                            {% for entry in admin_log %}
-                            <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
-                                {% if entry.is_deletion or not entry.get_admin_url %}
-                                    {{ entry.object_repr }}
-                                {% else %}
-                                    <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
-                                {% endif %}
-                                <br>
-                                {% if entry.content_type %}
-                                    <span class="mini quiet">{% filter capfirst %}{{ entry.content_type }}{% endfilter %}</span>
-                                {% else %}
-                                    <span class="mini quiet">{% trans 'Unknown content' %}</span>
-                                {% endif %}
-                            </li>
-                            {% endfor %}
-                            </ul>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+{#                <div class="col-md-12">#}
+{#                    <div class="card">#}
+{#                        <div class="card-header bg-secondary">#}
+{#                            <strong>{% trans 'Recent actions' %}</strong>#}
+{#                        </div>#}
+{#                        <div class="card-block">#}
+{#                            <h4 class="card-title">{% trans 'My actions' %}</h4>#}
+{#                        </div>#}
+{#                        <div class="card-text" style="overflow: hidden;">#}
+{#                            {% load log %}#}
+{#                            {% get_admin_log 5 as admin_log for_user user %}#}
+{#                            {% if not admin_log %}#}
+{#                            <p>{% trans 'None available' %}</p>#}
+{#                            {% else %}#}
+{#                            <ul class="actionlist">#}
+{#                            {% for entry in admin_log %}#}
+{#                            <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">#}
+{#                                {% if entry.is_deletion or not entry.get_admin_url %}#}
+{#                                    {{ entry.object_repr }}#}
+{#                                {% else %}#}
+{#                                    <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>#}
+{#                                {% endif %}#}
+{#                                <br>#}
+{#                                {% if entry.content_type %}#}
+{#                                    <span class="mini quiet">{% filter capfirst %}{{ entry.content_type }}{% endfilter %}</span>#}
+{#                                {% else %}#}
+{#                                    <span class="mini quiet">{% trans 'Unknown content' %}</span>#}
+{#                                {% endif %}#}
+{#                            </li>#}
+{#                            {% endfor %}#}
+{#                            </ul>#}
+{#                            {% endif %}#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
 
                 <div class="col-md-12">
                     <div class="card">

@@ -1,3 +1,7 @@
+###
+### DEPRECATED
+###
+
 from django.core.management.base import BaseCommand
 from modules.translator import Translator
 from modules.config import config

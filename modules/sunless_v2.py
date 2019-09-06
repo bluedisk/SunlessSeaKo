@@ -12,8 +12,11 @@ import tqdm
 from sunless_web.models import Entry
 
 
-def tracing(data, process, tree, pattern):
+def tracing(data, process, tree, pattern, can_go=None):
     """ tree tracing & processing """
+
+    if can_go and not can_go(tree):
+        return data
 
     if isinstance(data, list):
         for idx, datum in enumerate(data):
@@ -50,21 +53,24 @@ def tracing(data, process, tree, pattern):
 
             subpattern = pattern.copy()
             subpattern.append('idx')
-            data[idx] = tracing(datum, process, subtree, subpattern)
+            data[idx] = tracing(datum, process, subtree, subpattern, can_go)
 
     elif isinstance(data, dict):
         for key, value in data.items():
+            if key == 'Name' and 'HumanName' in data.keys():
+                continue
+
             subtree = tree.copy()
             subtree.append(str(key))
 
             subpattern = pattern.copy()
             subpattern.append(str(key))
 
-            data[key] = tracing(value, process, subtree, subpattern)
+            data[key] = tracing(value, process, subtree, subpattern, can_go)
 
     elif isinstance(data, str):
         hash_v2 = Entry.make_hash("/".join(tree))
-        return process(hash_v2, data)
+        return process(hash_v2, tree, data)
 
     elif type(data) in (int, bool, float, type(None),):
         pass
@@ -75,7 +81,7 @@ def tracing(data, process, tree, pattern):
     return data
 
 
-def run_all(process, from_dir):
+def run_all(process, from_dir, can_go=None):
     """ check all items in json files under the target path"""
 
     result = {}
@@ -86,7 +92,8 @@ def run_all(process, from_dir):
             data = json.load(data_file)
 
         cate, _ = os.path.splitext(basename)
-        tracing(data, process, [cate], [cate])
+
+        tracing(data, process, [cate], [cate], can_go)
 
         result[filename[len(from_dir):]] = data
 

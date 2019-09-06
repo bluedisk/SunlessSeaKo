@@ -53,7 +53,7 @@ def get_ranking():
 def get_recent():
     """최근 댓글 가져오기"""
 
-    recent = Discussion.objects.order_by('-created_at')[:5]
+    recent = Discussion.objects.order_by('-created_at')[:23]
 
     return [{
         'user': (discuss.user.username if discuss.user else 'System'),
