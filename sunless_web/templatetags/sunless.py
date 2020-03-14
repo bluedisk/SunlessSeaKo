@@ -4,8 +4,8 @@
 import json
 
 from django import template
-from django.db.models import Count, Q, Sum
 from django.contrib.auth import get_user_model
+from django.db.models import Count, Q
 from django.utils.safestring import mark_safe
 
 from sunless_web.models import Noun, Discussion, EntityCate  # , EntityCate
@@ -22,18 +22,24 @@ def get_progress():
     nouns_trans = Noun.objects.exclude(Q(translate='') | Q(translate__isnull=True)).count()
     nouns_final = Noun.objects.exclude(Q(final='') | Q(final__isnull=True)).count()
 
-    percentage_transed = [round(nouns_trans * 100 / nouns_total, 1),]
-    percentage_partial = [round((nouns_final-nouns_trans) * 100 / nouns_total, 1),]
+    percentage_transed = [round(nouns_trans * 100 / nouns_total, 1), ]
+    percentage_partial = [round((nouns_final - nouns_trans) * 100 / nouns_total, 1), ]
 
+    cate_names = ['Nouns']
     for cate in EntityCate.objects.all():
+
         total = cate.entries.count() or 1
         partial = cate.entries.filter(status='partial').count()
         transed = cate.entries.filter(status='finished').count()
 
+        if partial + transed == 0:
+            continue
+
+        cate_names.append(cate.name)
         percentage_partial.append(round(partial * 100 / total, 1))
         percentage_transed.append(round(transed * 100 / total, 1))
 
-    return percentage_partial, percentage_transed
+    return percentage_partial, percentage_transed, cate_names
 
 
 @register.simple_tag

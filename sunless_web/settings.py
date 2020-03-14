@@ -26,8 +26,9 @@ SECRET_KEY = 'k9-)@e_-!2!t4tm@2!_9qqf^-+%reca$wd)ypbvlh6-mx69@8h'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['sunless.eggpang.net', 'localhost']
+ALLOWED_HOSTS = ['sunless.eggpang.net', 'dev.eggpang.net', 'localhost']
 
+SITE_ID=1
 
 # Application definition
 

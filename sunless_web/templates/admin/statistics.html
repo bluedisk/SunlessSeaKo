@@ -43,8 +43,9 @@
                         <img src="{%  static 'images/main.jpg' %}" class="img-thumbnail" />
                     </div>
                     <p class="card-text">
-                        일본친구들 생유~<br/>
-                        원문 업데이트 된 내역은 우측 댓글 참고요 =>
+                        일본 친구들 생유~!<br/>
+                        일부 원문이 업데이트 되었습니다.<br/>
+                        업데이트 된 내역은 우측 댓글 참고요 =>
                     </p>
                     <p></p>
 {#                    <a href="{% url 'admin:sunless_web_entity_changelist' %}?amicheck=notyet" class="btn btn-primary btn-block">번역하러 가기!</a>#}
@@ -133,10 +134,10 @@
         var chart1 = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ["Nouns", "Events", "Qualities", "Exchanges", "Areas", "Personas"],
+                labels: {{ progress.2|safe }},
                 datasets: [
                 {
-                    label: ' % of Partial',
+                    label: '부분번역',
                     data: {{ progress.1 }},
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.5)',
@@ -156,7 +157,7 @@
                     ],
                     borderWidth: 1
                 },{
-                    label: ' % of Finished',
+                    label: '번역완료',
                     data: {{ progress.0 }},
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.2)',

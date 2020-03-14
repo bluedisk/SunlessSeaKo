@@ -1,0 +1,9 @@
+django
+-e git://github.com/darklow/django-suit.git@v2#egg=django-suit
+psycopg2
+django-user-accounts
+django-json-widget
+dal
+django-autocomplete-light
+requests
+python-telegram-bot

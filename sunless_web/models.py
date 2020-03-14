@@ -1,20 +1,19 @@
 import hashlib
 import json
 import random
+import re
 
-from django.contrib.humanize.templatetags.humanize import naturaltime
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.contrib.postgres.fields import JSONField
+from django.core.cache import cache
+from django.db import models
 from django.db.models import Count
 from django.db.models.functions import Length
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
-from django.core.cache import cache
 from modules.papago import papago
-
-import re
 
 
 class EntityCate(models.Model):
@@ -27,120 +26,120 @@ class EntityCate(models.Model):
     def __str__(self):
         return self.name
 
-
-class Entity(models.Model):
-    class Meta:
-        verbose_name = '번역 대상'
-        verbose_name_plural = '번역 대상 목록'
-
-    def __str__(self):
-        return self.path()
-
-    @staticmethod
-    def make_hash(cate, parent, key):
-        text = "%s-%s-%s" % (cate, parent, key)
-        return hashlib.md5(text.encode('utf8')).hexdigest()
-
-    def path(self):
-        return "%s / %s / %s" % (self.cate.name, self.parent, self.key)
-
-    path.short_description = '위치'
-
-    def summary(self):
-        return "%s..." % (self.original.get('Name', '') or '' +
-                          self.original.get('Teaser', '') or '' +
-                          self.original.get('Description', '') or '')[:50]
-
-    summary.short_description = '요약'
-
-    def checker_list(self):
-        return mark_safe(
-            ", ".join(["<a href='work/auth/user/%s/change'>%s</a>" % (c.pk, c.username) for c in self.checker.all()]))
-
-    checker_list.read_only = True
-    checker_list.short_description = '검수자 목록'
-
-    def checker_count(self):
-        return self.checker.count()
-
-    checker_count.short_description = '검수자 수'
-
-    cate = models.ForeignKey('EntityCate',
-                             verbose_name='소속 파일',
-                             related_name='entities',
-                             db_index=True,
-                             on_delete=models.CASCADE
-                             )
-
-    key = models.IntegerField('파일상 ID', db_index=True)
-    hash = models.CharField('HashHex V1', max_length=70, db_index=True, unique=True)
-    hash_v2 = models.CharField('HashHex v2', max_length=70, db_index=True, unique=True, null=True, blank=True)
-
-    parent = models.CharField('부모 항목', max_length=70, null=True, blank=True)
-
-    original = JSONField('Original Text(JSON)', default=dict)
-    marked = JSONField('Noun marked Original Text(JSON)', default=dict)
-    reference = JSONField('Reference Text(JSON)', default=dict)
-    google = JSONField('Google Translated Text(JSON)', default=dict)
-    papago = JSONField('Papago Translated Text(JSON)', default=dict)
-    translate = JSONField('Translated Text(JSON)', default=dict)
-    final = JSONField('Final Text(JSON)', default=dict)
-
-    checker = models.ManyToManyField(get_user_model(), related_name="entities")
-
-    translated = models.IntegerField('초벌 번역 숫자', default=0)
-    finalized = models.IntegerField('변역 확정 숫자', default=0)
-    items = models.IntegerField('변역 항목 숫자', default=0)
-
-    TRANSLATE_STATUS = (
-        ('none', '안됨'),
-        ('in', '진행 중'),
-        ('done', '완료')
-    )
-    status = models.CharField('번역 상태', max_length=4, choices=TRANSLATE_STATUS, default='none')
-    error = models.TextField('error', null=True)
-
-    created_at = models.DateTimeField('생성일', auto_now_add=True)
-    updated_at = models.DateTimeField('수정일', auto_now=True)
-
-    STATUS_HTML = {
-        'none': '<span style="color:#a08080;"><i class="far fa-times-circle"></i> 안됨</span>',
-        'in': '<span style="color:#8080a0;"><i class="far fa-edit"></i> 진행</span>',
-        'done': '<span style="color:#80a080;"><i class="far fa-check-circle"></i> 완료</span>'
-    }
-
-    def status_html(self):
-        return mark_safe(self.STATUS_HTML.get(self.status, 'Error!'))
-
-    status_html.short_description = '번역상태'
-
-    def check_translated(self):
-        items = 0
-        transed = 0
-        finaled = 0
-
-        for field in ('Name', 'Teaser', "Description"):
-            if self.original.get(field, None):
-                items += 1
-                if self.final.get(field, None):
-                    transed += 1
-                if self.translate.get(field, None):
-                    finaled += 1
-
-        return items, transed, finaled
-
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
-
-        self.items, self.translated, self.finalized = self.check_translated()
-        if not self.translated and not self.finalized:
-            self.status = 'none'
-        elif self.finalized == self.items:
-            self.status = 'done'
-        else:
-            self.status = 'in'
-
-        super(Entity, self).save(force_insert, force_update, using, update_fields)
+#
+# class Entity(models.Model):
+#     class Meta:
+#         verbose_name = '번역 대상'
+#         verbose_name_plural = '번역 대상 목록'
+#
+#     def __str__(self):
+#         return self.path()
+#
+#     @staticmethod
+#     def make_hash(cate, parent, key):
+#         text = "%s-%s-%s" % (cate, parent, key)
+#         return hashlib.md5(text.encode('utf8')).hexdigest()
+#
+#     def path(self):
+#         return "%s / %s / %s" % (self.cate.name, self.parent, self.key)
+#
+#     path.short_description = '위치'
+#
+#     def summary(self):
+#         return "%s..." % (self.original.get('Name', '') or '' +
+#                           self.original.get('Teaser', '') or '' +
+#                           self.original.get('Description', '') or '')[:50]
+#
+#     summary.short_description = '요약'
+#
+#     def checker_list(self):
+#         return mark_safe(
+#             ", ".join(["<a href='work/auth/user/%s/change'>%s</a>" % (c.pk, c.username) for c in self.checker.all()]))
+#
+#     checker_list.read_only = True
+#     checker_list.short_description = '검수자 목록'
+#
+#     def checker_count(self):
+#         return self.checker.count()
+#
+#     checker_count.short_description = '검수자 수'
+#
+#     cate = models.ForeignKey('EntityCate',
+#                              verbose_name='소속 파일',
+#                              related_name='entities',
+#                              db_index=True,
+#                              on_delete=models.CASCADE
+#                              )
+#
+#     key = models.IntegerField('파일상 ID', db_index=True)
+#     hash = models.CharField('HashHex V1', max_length=70, db_index=True, unique=True)
+#     hash_v2 = models.CharField('HashHex v2', max_length=70, db_index=True, unique=True, null=True, blank=True)
+#
+#     parent = models.CharField('부모 항목', max_length=70, null=True, blank=True)
+#
+#     original = JSONField('Original Text(JSON)', default=dict)
+#     marked = JSONField('Noun marked Original Text(JSON)', default=dict)
+#     reference = JSONField('Reference Text(JSON)', default=dict)
+#     google = JSONField('Google Translated Text(JSON)', default=dict)
+#     papago = JSONField('Papago Translated Text(JSON)', default=dict)
+#     translate = JSONField('Translated Text(JSON)', default=dict)
+#     final = JSONField('Final Text(JSON)', default=dict)
+#
+#     checker = models.ManyToManyField(get_user_model(), related_name="entities")
+#
+#     translated = models.IntegerField('초벌 번역 숫자', default=0)
+#     finalized = models.IntegerField('변역 확정 숫자', default=0)
+#     items = models.IntegerField('변역 항목 숫자', default=0)
+#
+#     TRANSLATE_STATUS = (
+#         ('none', '안됨'),
+#         ('in', '진행 중'),
+#         ('done', '완료')
+#     )
+#     status = models.CharField('번역 상태', max_length=4, choices=TRANSLATE_STATUS, default='none')
+#     error = models.TextField('error', null=True)
+#
+#     created_at = models.DateTimeField('생성일', auto_now_add=True)
+#     updated_at = models.DateTimeField('수정일', auto_now=True)
+#
+#     STATUS_HTML = {
+#         'none': '<span style="color:#a08080;"><i class="far fa-times-circle"></i> 안됨</span>',
+#         'in': '<span style="color:#8080a0;"><i class="far fa-edit"></i> 진행</span>',
+#         'done': '<span style="color:#80a080;"><i class="far fa-check-circle"></i> 완료</span>'
+#     }
+#
+#     def status_html(self):
+#         return mark_safe(self.STATUS_HTML.get(self.status, 'Error!'))
+#
+#     status_html.short_description = '번역상태'
+#
+#     def check_translated(self):
+#         items = 0
+#         transed = 0
+#         finaled = 0
+#
+#         for field in ('Name', 'Teaser', "Description"):
+#             if self.original.get(field, None):
+#                 items += 1
+#                 if self.final.get(field, None):
+#                     transed += 1
+#                 if self.translate.get(field, None):
+#                     finaled += 1
+#
+#         return items, transed, finaled
+#
+#     def save(self, force_insert=False, force_update=False, using=None,
+#              update_fields=None):
+#
+#         self.items, self.translated, self.finalized = self.check_translated()
+#         if not self.translated and not self.finalized:
+#             self.status = 'none'
+#         elif self.finalized == self.items:
+#             self.status = 'done'
+#         else:
+#             self.status = 'in'
+#
+#         super(Entity, self).save(force_insert, force_update, using, update_fields)
 
 
 class EntryPath(models.Model):
