@@ -7,7 +7,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0008_auto_20180513_2324'),
     ]
@@ -16,31 +15,37 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='entity',
             name='final',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Final Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True,
+                                                                 verbose_name='Final Text(JSON)'),
         ),
         migrations.AlterField(
             model_name='entity',
             name='google',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Google Translated Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True,
+                                                                 verbose_name='Google Translated Text(JSON)'),
         ),
         migrations.AlterField(
             model_name='entity',
             name='original',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Original Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True,
+                                                                 verbose_name='Original Text(JSON)'),
         ),
         migrations.AlterField(
             model_name='entity',
             name='papago',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Papago Translated Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True,
+                                                                 verbose_name='Papago Translated Text(JSON)'),
         ),
         migrations.AlterField(
             model_name='entity',
             name='reference',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Reference Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True,
+                                                                 verbose_name='Reference Text(JSON)'),
         ),
         migrations.AlterField(
             model_name='entity',
             name='translate',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Translated Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True,
+                                                                 verbose_name='Translated Text(JSON)'),
         ),
     ]

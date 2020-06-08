@@ -12,7 +12,7 @@ _configs = {
             'key': '',
             'secret': '',
         },
-        "database":  {
+        "database": {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql_psycopg2',
                 'NAME': '',
@@ -34,7 +34,7 @@ _configs = {
             'key': '',
             'secret': '',
         },
-        "database":  {
+        "database": {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql_psycopg2',
                 'NAME': '',

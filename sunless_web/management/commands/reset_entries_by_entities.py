@@ -1,10 +1,9 @@
 """
 rest_entiries_by_entities 커맨드용 클래스 파일
 """
+import tqdm
 from django.core.management.base import BaseCommand
 from django.db import transaction
-
-import tqdm
 
 from sunless_web.models import Entry, Entity, Translation, Discussion
 

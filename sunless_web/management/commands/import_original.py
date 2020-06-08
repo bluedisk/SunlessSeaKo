@@ -2,27 +2,24 @@
 ### DEPRECATED
 ###
 
-from django.core.management.base import BaseCommand
-from modules.sunless import RecursiveProcessor
-
-from sunless_web.models import EntityCate, Entity
-
-import re
-import os
 import json
+import os
 
-from hashlib import sha256
+from django.core.management.base import BaseCommand
 from tqdm import tqdm
+
+from modules.sunless import RecursiveProcessor
+from sunless_web.models import EntityCate, Entity
 
 SHEET_ORIGINAL_PATH = "data/entities"
 SHEET_VALUE_CATES = [
-    #'areas_import',
+    # 'areas_import',
     'areas',
-    #'exchanges_import',
+    # 'exchanges_import',
     'exchanges',
-    #'personas_import',
+    # 'personas_import',
     'personas',
-    #'qualities_import',
+    # 'qualities_import',
     'qualities',
     # 'events_import',
     'events',

@@ -37,8 +37,10 @@
                 <h6 slot="header" class="mb-0 text-gray-dark">#T{{ item.id }} / {{ item.object }}</h6>
 
                 <div class="mb-3" style="white-space: pre-wrap;"><strong>원문</strong><br/>{{ item.text_en }}<br/></div>
-                <div class="mb-3" style="white-space: pre-wrap;" v-if="item.text_jpkr"><strong>일본어</strong><br/> {{ item.text_jpkr  }}<br/></div>
-                <div class="mb-3" style="white-space: pre-wrap;" v-if="item.text_pp"><strong>파파고</strong><br/> <span v-html="item.text_pp"></span><br/>
+                <div class="mb-3" style="white-space: pre-wrap;" v-if="item.text_jpkr"><strong>일본어</strong><br/> {{
+                    item.text_jpkr }}<br/></div>
+                <div class="mb-3" style="white-space: pre-wrap;" v-if="item.text_pp"><strong>파파고</strong><br/> <span
+                        v-html="item.text_pp"></span><br/>
                 </div>
                 <hr/>
 

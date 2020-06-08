@@ -1,9 +1,10 @@
 import re
 
-from django.db.models.functions import Length
 from django.core.management.base import BaseCommand
-from sunless_web.models import Entity, Noun, NounCate
+from django.db.models.functions import Length
 from tqdm import tqdm
+
+from sunless_web.models import Entity, Noun
 from .make_patch import get_nouns
 
 
@@ -30,11 +31,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         nouns = get_nouns()
-        word_list = [(en, kr, re.compile(r'\b%s(?:\b|([^a-zA-Z0-9\s]+))' % re.escape(en), flags=re.IGNORECASE), "!N%04d!" % k) for k, en, kr in nouns]
+        word_list = [
+            (en, kr, re.compile(r'\b%s(?:\b|([^a-zA-Z0-9\s]+))' % re.escape(en), flags=re.IGNORECASE), "!N%04d!" % k)
+            for k, en, kr in nouns]
 
-        wrong_nidah1 = re.compile(r'(답|됩|듭|입|읍|습|합|줍|옵|랍|립|킵)'+re.escape('!N0373!'))
-        wrong_nidah2 = re.compile(re.escape('!N0373!')+r'(\.|\!|"|\')')
-        #duplicate = re.compile('(?:@\[)+(@\[.+?\]\(\w*:\d+\))(?:\]\(\w*:\d+\))+')
+        wrong_nidah1 = re.compile(r'(답|됩|듭|입|읍|습|합|줍|옵|랍|립|킵)' + re.escape('!N0373!'))
+        wrong_nidah2 = re.compile(re.escape('!N0373!') + r'(\.|\!|"|\')')
+        # duplicate = re.compile('(?:@\[)+(@\[.+?\]\(\w*:\d+\))(?:\]\(\w*:\d+\))+')
 
         for e in tqdm(Entity.objects.all()):
             # @[A Gift for the Wistful Deviless](아이템:10)

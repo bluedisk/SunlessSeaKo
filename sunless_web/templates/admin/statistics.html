@@ -40,7 +40,7 @@
                 <div class="card-block">
                     <h4 class="card-title">Sunless Sea 한글화 작업</h4>
                     <div class="card-img mb-1 mt-1">
-                        <img src="{%  static 'images/main.jpg' %}" class="img-thumbnail" />
+                        <img src="{% static 'images/main.jpg' %}" class="img-thumbnail"/>
                     </div>
                     <p class="card-text">
                         일본 친구들 생유~!<br/>
@@ -48,49 +48,50 @@
                         업데이트 된 내역은 우측 댓글 참고요 =>
                     </p>
                     <p></p>
-{#                    <a href="{% url 'admin:sunless_web_entity_changelist' %}?amicheck=notyet" class="btn btn-primary btn-block">번역하러 가기!</a>#}
-                    <a href="https://github.com/bluedisk/SunlessSeaKo" class="btn btn-default btn-block" target="_blank">View on github</a>
+                    {#                    <a href="{% url 'admin:sunless_web_entity_changelist' %}?amicheck=notyet" class="btn btn-primary btn-block">번역하러 가기!</a>#}
+                    <a href="https://github.com/bluedisk/SunlessSeaKo" class="btn btn-default btn-block"
+                       target="_blank">View on github</a>
                 </div>
             </div>
         </div>
 
         <div class="col-md-5">
             <div class="row">
-{#                <div class="col-md-12">#}
-{#                    <div class="card">#}
-{#                        <div class="card-header bg-secondary">#}
-{#                            <strong>{% trans 'Recent actions' %}</strong>#}
-{#                        </div>#}
-{#                        <div class="card-block">#}
-{#                            <h4 class="card-title">{% trans 'My actions' %}</h4>#}
-{#                        </div>#}
-{#                        <div class="card-text" style="overflow: hidden;">#}
-{#                            {% load log %}#}
-{#                            {% get_admin_log 5 as admin_log for_user user %}#}
-{#                            {% if not admin_log %}#}
-{#                            <p>{% trans 'None available' %}</p>#}
-{#                            {% else %}#}
-{#                            <ul class="actionlist">#}
-{#                            {% for entry in admin_log %}#}
-{#                            <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">#}
-{#                                {% if entry.is_deletion or not entry.get_admin_url %}#}
-{#                                    {{ entry.object_repr }}#}
-{#                                {% else %}#}
-{#                                    <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>#}
-{#                                {% endif %}#}
-{#                                <br>#}
-{#                                {% if entry.content_type %}#}
-{#                                    <span class="mini quiet">{% filter capfirst %}{{ entry.content_type }}{% endfilter %}</span>#}
-{#                                {% else %}#}
-{#                                    <span class="mini quiet">{% trans 'Unknown content' %}</span>#}
-{#                                {% endif %}#}
-{#                            </li>#}
-{#                            {% endfor %}#}
-{#                            </ul>#}
-{#                            {% endif %}#}
-{#                        </div>#}
-{#                    </div>#}
-{#                </div>#}
+                {#                <div class="col-md-12">#}
+                {#                    <div class="card">#}
+                {#                        <div class="card-header bg-secondary">#}
+                {#                            <strong>{% trans 'Recent actions' %}</strong>#}
+                {#                        </div>#}
+                {#                        <div class="card-block">#}
+                {#                            <h4 class="card-title">{% trans 'My actions' %}</h4>#}
+                {#                        </div>#}
+                {#                        <div class="card-text" style="overflow: hidden;">#}
+                {#                            {% load log %}#}
+                {#                            {% get_admin_log 5 as admin_log for_user user %}#}
+                {#                            {% if not admin_log %}#}
+                {#                            <p>{% trans 'None available' %}</p>#}
+                {#                            {% else %}#}
+                {#                            <ul class="actionlist">#}
+                {#                            {% for entry in admin_log %}#}
+                {#                            <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">#}
+                {#                                {% if entry.is_deletion or not entry.get_admin_url %}#}
+                {#                                    {{ entry.object_repr }}#}
+                {#                                {% else %}#}
+                {#                                    <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>#}
+                {#                                {% endif %}#}
+                {#                                <br>#}
+                {#                                {% if entry.content_type %}#}
+                {#                                    <span class="mini quiet">{% filter capfirst %}{{ entry.content_type }}{% endfilter %}</span>#}
+                {#                                {% else %}#}
+                {#                                    <span class="mini quiet">{% trans 'Unknown content' %}</span>#}
+                {#                                {% endif %}#}
+                {#                            </li>#}
+                {#                            {% endfor %}#}
+                {#                            </ul>#}
+                {#                            {% endif %}#}
+                {#                        </div>#}
+                {#                    </div>#}
+                {#                </div>#}
 
                 <div class="col-md-12">
                     <div class="card">
@@ -102,7 +103,8 @@
                             {% for discuss in recent %}
                                 <div class="row">
                                     <div class="col-2">
-                                        <a href="{{ discuss.link }}" class="badge badge-secondary">#{{ discuss.entry }}</a>
+                                        <a href="{{ discuss.link }}"
+                                           class="badge badge-secondary">#{{ discuss.entry }}</a>
                                     </div>
                                     <div class="col-2">
                                         <span>{{ discuss.user }}</span>
@@ -136,53 +138,53 @@
             data: {
                 labels: {{ progress.2|safe }},
                 datasets: [
-                {
-                    label: '부분번역',
-                    data: {{ progress.1 }},
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 206, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)',
-                        'rgba(255, 159, 64, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255,99,132,1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                },{
-                    label: '번역완료',
-                    data: {{ progress.0 }},
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(255, 206, 86, 0.2)',
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(255,99,132,1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
+                    {
+                        label: '부분번역',
+                        data: {{ progress.1 }},
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)',
+                            'rgba(255, 159, 64, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255,99,132,1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }, {
+                        label: '번역완료',
+                        data: {{ progress.0 }},
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255,99,132,1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
             },
             options: {
                 scales: {
                     yAxes: [{
                         ticks: {
-                            beginAtZero:true,
+                            beginAtZero: true,
                             min: 0, // minimum value
                             max: 100 // maximum value
                         },
@@ -202,7 +204,7 @@
                         'sunless_web/entity/?cate__name__exact=personas'
                     ];
 
-                    if ( i.length == 0) return;
+                    if (i.length == 0) return;
                     location.href = links[i[0]._index];
                 }
             }
@@ -215,33 +217,33 @@
             data: {
                 labels: {{ rank.k }},
                 datasets: [
-                {
-                    label: ' # of checked',
-                    data: {{ rank.v }},
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 206, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)',
-                        'rgba(255, 159, 64, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255,99,132,1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
+                    {
+                        label: ' # of checked',
+                        data: {{ rank.v }},
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)',
+                            'rgba(255, 159, 64, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255,99,132,1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
             },
             options: {
                 scales: {
                     yAxes: [{
                         ticks: {
-                            beginAtZero:true,
+                            beginAtZero: true,
                             min: 0, // minimum value
                         }
                     }]

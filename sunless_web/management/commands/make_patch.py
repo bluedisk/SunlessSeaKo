@@ -1,21 +1,17 @@
+import datetime
 import json
+import os
 import sys
 import zipfile
-
-import os
-
-import datetime
 from io import BytesIO
 
 from django.core.management.base import BaseCommand
 from django.db.models import Count, Sum
 from django.utils import timezone
 
+from modules.config import config
 from modules.log import TelegramLog, PrintLog
 from modules.sunless import RecursiveUpdateProcessor
-
-from modules.config import config
-
 from sunless_web.models import Patch, Entity, EntityCate, Noun, NounCate
 
 

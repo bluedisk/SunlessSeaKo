@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0038_auto_20180901_1507'),
     ]
@@ -17,6 +16,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='entry',
             name='status',
-            field=models.CharField(choices=[('none', '안됨'), ('proto', '검수 필요'), ('discuss', '논의 필요'), ('verified', '완료')], default='none', max_length=10, verbose_name='번역 상태'),
+            field=models.CharField(
+                choices=[('none', '안됨'), ('proto', '검수 필요'), ('discuss', '논의 필요'), ('verified', '완료')], default='none',
+                max_length=10, verbose_name='번역 상태'),
         ),
     ]

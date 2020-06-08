@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0037_auto_20180901_1452'),
     ]
@@ -13,7 +12,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='entity',
             name='hash_v2',
-            field=models.CharField(blank=True, db_index=True, max_length=70, null=True, unique=True, verbose_name='HashHex v2'),
+            field=models.CharField(blank=True, db_index=True, max_length=70, null=True, unique=True,
+                                   verbose_name='HashHex v2'),
         ),
         migrations.AlterField(
             model_name='entity',

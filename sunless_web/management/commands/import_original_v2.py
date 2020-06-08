@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 
 from modules.papago import papago
 from modules.sunless_v2 import run_all
-from sunless_web.models import Entry, EntryPath, EntityCate, Translation, Discussion
+from sunless_web.models import Entry, EntryPath, EntityCate, Discussion
 
 missed = 0
 updated = 0

@@ -5,7 +5,6 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.contrib.humanize.templatetags.humanize import naturaltime
-from django.contrib.postgres.fields import JSONField
 from django.core.cache import cache
 from django.db import models
 from django.db.models import Count
@@ -25,6 +24,7 @@ class EntityCate(models.Model):
 
     def __str__(self):
         return self.name
+
 
 #
 # class Entity(models.Model):
@@ -186,12 +186,17 @@ class EntryPath(models.Model):
     def update_status(self):
         children_status = [c.status for c in self.entries.all()]
 
-        if 'none' not in children_status:
+        if 'none' not in children_status and self.status != 'finished':
             self.status = 'finished'
-        elif 'finished' not in children_status:
+
+        elif 'finished' not in children_status and self.status != 'none':
             self.status = 'none'
-        else:
+
+        elif self.status != 'partial':
             self.status = 'partial'
+
+        else:
+            return
 
         self.save()
 
@@ -313,10 +318,14 @@ class Entry(models.Model):
 
     def update_status(self):
         """ 번역 상태 업데이트 """
-        if self.translations.exists():
+        if self.translations.exists() and self.status != 'finished':
             self.status = 'finished'
-        else:
+
+        elif self.status != 'none':
             self.status = 'none'
+
+        else:
+            return
 
         self.save()
 

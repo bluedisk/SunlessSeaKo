@@ -1,23 +1,14 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-
-from django.utils.safestring import mark_safe
-from django.utils.encoding import force_text
-
-from django_json_widget.widgets import JSONEditorWidget
-from django.contrib.postgres.fields import JSONField
-from django import forms
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 
-from urllib.parse import parse_qsl
-
-from .models import EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser, Entry, Translation, EntryPath, Discussion
-from mentions.widgets import ElasticTextarea, TranslateTextarea
+from mentions.widgets import ElasticTextarea
+from .models import EntityCate, Noun, NounCate, Conversation, Answer, Patch, TelegramUser, Entry, Translation, \
+    EntryPath, Discussion
 
 TRANS_HELP = None
 
@@ -313,9 +304,9 @@ class NounAdmin(admin.ModelAdmin):
             'all': ['https://use.fontawesome.com/releases/v5.0.13/css/all.css']
         }
 
-    list_display = ['cate_safe', 'name', 'reference', 'papago', 'translate', 'final'] # 'google',
+    list_display = ['cate_safe', 'name', 'reference', 'papago', 'translate', 'final']  # 'google',
     list_display_links = ['name']
-    list_editable = ['reference',  'papago', 'translate', 'final'] # 'google',
+    list_editable = ['reference', 'papago', 'translate', 'final']  # 'google',
     list_filter = ('cate',)
 
     search_fields = ['name', 'papago', 'translate', 'final']
@@ -334,7 +325,7 @@ class AnswerInline(admin.TabularInline):
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    inlines = (AnswerInline, )
+    inlines = (AnswerInline,)
 
 
 @admin.register(Patch)
@@ -350,7 +341,7 @@ class ProfileInline(admin.StackedInline):
 
 
 class CustomUserAdmin(UserAdmin):
-    inlines = (ProfileInline, )
+    inlines = (ProfileInline,)
 
     def get_inline_instances(self, request, obj=None):
         if not obj:
@@ -369,21 +360,21 @@ class EntryInline(admin.StackedInline):
     readonly_fields = ['text_en', 'text_jp', 'text_jpkr', 'status', 'basepath', 'object']
 
     fieldsets = [
-            ('Location', {
-                'description': '게임상의 데이터 위치 정보',
-                'fields': (('object', 'status'), ),
-            }),
-            ('Translation', {
-                'description': '번역 진행',
-                'fields': ('text_en', 'text_jp', 'text_jpkr', ),
-            }),
+        ('Location', {
+            'description': '게임상의 데이터 위치 정보',
+            'fields': (('object', 'status'),),
+        }),
+        ('Translation', {
+            'description': '번역 진행',
+            'fields': ('text_en', 'text_jp', 'text_jpkr',),
+        }),
     ]
 
 
 @admin.register(EntryPath)
 class EntryPathAdmin(admin.ModelAdmin):
-    inlines = (EntryInline, )
-    readonly_fields = ('name', )
+    inlines = (EntryInline,)
+    readonly_fields = ('name',)
     search_fields = ("name", "entries__text_en", "entries__text_jpkr", "entries__translations__text")
 
     list_display = ('name', 'status', 'entry_count')
@@ -404,7 +395,7 @@ class DiscussionInline(admin.TabularInline):
 
 class TranslationInline(admin.TabularInline):
     model = Translation
-    inlines = (DiscussionInline, )
+    inlines = (DiscussionInline,)
 
     formfield_overrides = {
         models.TextField: {'widget': ElasticTextarea()},
@@ -413,7 +404,7 @@ class TranslationInline(admin.TabularInline):
 
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
-    inlines = (TranslationInline, )
+    inlines = (TranslationInline,)
 
     list_display = ('hash_v2', 'fullpath', 'summary')
     list_filter = ('status', 'path__cate')
@@ -423,18 +414,18 @@ class EntryAdmin(admin.ModelAdmin):
                        'text_jp', 'text_jpkr', 'status', 'basepath', 'object']
 
     fieldsets = [
-            ('Location', {
-                'description': '게임상의 데이터 위치 정보',
-                'fields': ['hash_v1', 'hash_v2', ('basepath', 'object')],
-            }),
-            ('Status', {
-                'description': '진행상태',
-                'fields': ['status', 'checker'],
-            }),
-            ('Translation', {
-                'description': '번역 진행',
-                'fields': [('text_en', ), ('text_jpkr', 'text_jp')],
-            }),
+        ('Location', {
+            'description': '게임상의 데이터 위치 정보',
+            'fields': ['hash_v1', 'hash_v2', ('basepath', 'object')],
+        }),
+        ('Status', {
+            'description': '진행상태',
+            'fields': ['status', 'checker'],
+        }),
+        ('Translation', {
+            'description': '번역 진행',
+            'fields': [('text_en',), ('text_jpkr', 'text_jp')],
+        }),
     ]
 
     formfield_overrides = {

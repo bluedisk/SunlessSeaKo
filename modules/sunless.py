@@ -6,7 +6,7 @@ from abc import ABCMeta, abstractmethod
 
 import hgtk
 
-from sunless_web.models import Entity, Entry
+from sunless_web.models import Entry
 
 EXCLUDE_OBJECTS = (
     # events
@@ -26,6 +26,7 @@ EXCLUDE_OBJECTS = (
 
 class RecursiveProcessor(metaclass=ABCMeta):
     """ 계층적인 구조의 데이터 처리를 위한 프로세서"""
+
     def __init__(self):
         self.processed = 0
         self.notprocessed = 0

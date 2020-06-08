@@ -15,7 +15,6 @@ def reverse_func(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0047_auto_20181004_1547'),
     ]

@@ -5,7 +5,7 @@ jQuery(function ($) {
     function translateArea() {
         // language=JQuery-CSS
 
-        $.getJSON('/nouns/?' + Math.random(), function(data) {
+        $.getJSON('/nouns/?' + Math.random(), function (data) {
             var mentions = $('.mentions');
 
             mentions.mentionsInput({

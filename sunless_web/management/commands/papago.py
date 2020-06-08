@@ -1,12 +1,10 @@
 from django.core.management.base import BaseCommand
+from tqdm import tqdm
 
 from modules.config import config
-from modules.translator import Translator
-
-from sunless_web.models import Entity
-
-from tqdm import tqdm
 from modules.papago import papago
+from modules.translator import Translator
+from sunless_web.models import Entity
 
 
 class Command(BaseCommand):

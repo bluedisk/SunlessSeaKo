@@ -5,7 +5,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0055_auto_20181025_2216'),
     ]
@@ -19,12 +18,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='entity',
             name='google',
-            field=django.contrib.postgres.fields.jsonb.JSONField(default=dict, verbose_name='Google Translated Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(default=dict,
+                                                                 verbose_name='Google Translated Text(JSON)'),
         ),
         migrations.AlterField(
             model_name='entity',
             name='marked',
-            field=django.contrib.postgres.fields.jsonb.JSONField(default=dict, verbose_name='Noun marked Original Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(default=dict,
+                                                                 verbose_name='Noun marked Original Text(JSON)'),
         ),
         migrations.AlterField(
             model_name='entity',
@@ -34,7 +35,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='entity',
             name='papago',
-            field=django.contrib.postgres.fields.jsonb.JSONField(default=dict, verbose_name='Papago Translated Text(JSON)'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(default=dict,
+                                                                 verbose_name='Papago Translated Text(JSON)'),
         ),
         migrations.AlterField(
             model_name='entity',

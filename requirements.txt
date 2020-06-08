@@ -3,7 +3,6 @@ django
 psycopg2
 django-user-accounts
 django-json-widget
-dal
 django-autocomplete-light
 requests
 python-telegram-bot

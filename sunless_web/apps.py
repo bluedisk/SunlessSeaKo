@@ -24,4 +24,3 @@ class SunlessConfig(DjangoSuitConfig):
     )
 
     verbose_name = '라라라'
-

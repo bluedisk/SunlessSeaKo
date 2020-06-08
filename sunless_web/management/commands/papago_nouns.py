@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
-from sunless_web.models import Noun
-
 from tqdm import tqdm
+
 from modules.papago import papago
+from sunless_web.models import Noun
 
 
 class Command(BaseCommand):
@@ -12,7 +12,6 @@ class Command(BaseCommand):
         error_count = 0
         for noun in tqdm(Noun.objects.all()):
             if not noun.papago:
-
                 transed = papago(noun.nema, True)
 
                 translate_count += 1

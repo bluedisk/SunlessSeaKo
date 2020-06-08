@@ -6,7 +6,9 @@
     {{ block.super }}
     <br/>
     <div class="submit-row cleanfix">
-        <button type="submit" name="_viewprev" {{ onclick_attrib }} class="btn btn-high btn-info">{% trans '저장 & 이전으로' %}</button>
-        <button type="submit" name="_viewnext" {{ onclick_attrib }} class="btn btn-high btn-info">{% trans '저장 & 다음으로' %}</button>
+        <button type="submit" name="_viewprev" {{ onclick_attrib }}
+                class="btn btn-high btn-info">{% trans '저장 & 이전으로' %}</button>
+        <button type="submit" name="_viewnext" {{ onclick_attrib }}
+                class="btn btn-high btn-info">{% trans '저장 & 다음으로' %}</button>
     </div>
 {% endblock %}

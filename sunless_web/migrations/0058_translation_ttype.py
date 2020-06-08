@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0057_auto_20181025_2230'),
     ]
@@ -13,6 +12,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='translation',
             name='ttype',
-            field=models.CharField(choices=[('unknown', '모름'), ('papago', '파파고번역'), ('japan', '일본번역'), ('user', '유저번역')], default='unknown', max_length=10, verbose_name='번역종류'),
+            field=models.CharField(
+                choices=[('unknown', '모름'), ('papago', '파파고번역'), ('japan', '일본번역'), ('user', '유저번역')],
+                default='unknown', max_length=10, verbose_name='번역종류'),
         ),
     ]

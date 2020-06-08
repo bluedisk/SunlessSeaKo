@@ -1,10 +1,10 @@
-from django.core.management.base import BaseCommand
-from sunless_web.models import EntityCate, Entry, Entity, EntryPath
-
-import pickle
 import os
+import pickle
 
+from django.core.management.base import BaseCommand
 from tqdm import tqdm
+
+from sunless_web.models import Entry, Entity, EntryPath
 
 
 class Command(BaseCommand):

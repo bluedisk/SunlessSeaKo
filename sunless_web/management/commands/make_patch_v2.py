@@ -1,27 +1,23 @@
 """
 Make patch from V2 data(Entry)
 """
+import datetime
 import json
 import re
 import sys
 import zipfile
-
-import datetime
 from io import BytesIO
 
 import hgtk
 import tqdm
 from django.core.management.base import BaseCommand
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Q
 from django.utils import timezone
 
-from modules.log import TelegramLog, PrintLog
-from modules.sunless import RecursiveUpdateProcessor
-
 from modules.config import config
+from modules.log import TelegramLog, PrintLog
 from modules.sunless_v2 import run_all
-
-from sunless_web.models import Patch, EntityCate, Noun, NounCate, Entry
+from sunless_web.models import Patch, Noun, NounCate, Entry
 
 
 ################################################
@@ -37,7 +33,8 @@ def get_updated(check_from):
     """ check_from 이후 업데이트된 정보 갯수를 가져온다 """
 
     noun_updated = Noun.objects.filter(updated_at__gt=check_from).count()
-    entry_updated = Entry.objects.filter(updated_at__gt=check_from).values('path__cate').annotate(cnt=Count('path__cate'))
+    entry_updated = Entry.objects.filter(updated_at__gt=check_from).values('path__cate').annotate(
+        cnt=Count('path__cate'))
 
     return noun_updated, {e['path__cate']: e['cnt'] for e in entry_updated}
 
@@ -215,15 +212,18 @@ class Command(BaseCommand):
             min_patch.items = Entry.objects.count()
             min_patch.translated = 0
             min_patch.finalized = Entry.objects.filter(status='finished').count()
-            min_patch.file.save("sunless_sea_ko_min_%s.zip" % timezone.localtime().strftime('%Y%m%d'), min_patch_data, save=False)
+            min_patch.file.save("sunless_sea_ko_min_%s.zip" % timezone.localtime().strftime('%Y%m%d'), min_patch_data,
+                                save=False)
             min_patch.save()
 
             full_patch = Patch()
             full_patch.patch_type = 'full'
             full_patch.items = Entry.objects.count()
             full_patch.translated = 0
-            full_patch.finalized = Entry.objects.filter(Q(status='finished')|Q(text_jpkr__isnull=False)|Q(text_pp__isnull=False)).count()
-            full_patch.file.save("sunless_sea_ko_full_%s.zip" % timezone.localtime().strftime('%Y%m%d'), full_patch_data, save=False)
+            full_patch.finalized = Entry.objects.filter(
+                Q(status='finished') | Q(text_jpkr__isnull=False) | Q(text_pp__isnull=False)).count()
+            full_patch.file.save("sunless_sea_ko_full_%s.zip" % timezone.localtime().strftime('%Y%m%d'),
+                                 full_patch_data, save=False)
             full_patch.save()
 
             log.log("""
@@ -231,4 +231,5 @@ class Command(BaseCommand):
     파일 생성 완료! 파일 다운로드는 아래 링크를 이용해 주세요!
     --------------------------------------------
     최소버전 : https://sunless.eggpang.net%s
-    풀버전: https://sunless.eggpang.net%s""" % (", ".join(updates), min_patch.get_absolute_url(), full_patch.get_absolute_url()))
+    풀버전: https://sunless.eggpang.net%s""" % (
+            ", ".join(updates), min_patch.get_absolute_url(), full_patch.get_absolute_url()))

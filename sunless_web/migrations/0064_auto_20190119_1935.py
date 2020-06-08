@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0063_auto_20190113_2104'),
     ]
@@ -19,7 +18,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='patch',
             name='patch_type',
-            field=models.CharField(choices=[('korean', '한국 번역만'), ('full', '일본 번역, 기계 번역 포함')], default='full', max_length=20, verbose_name='패치 종류'),
+            field=models.CharField(choices=[('korean', '한국 번역만'), ('full', '일본 번역, 기계 번역 포함')], default='full',
+                                   max_length=20, verbose_name='패치 종류'),
         ),
         migrations.AlterField(
             model_name='entry',

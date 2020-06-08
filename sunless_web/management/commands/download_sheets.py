@@ -2,18 +2,16 @@
 ### DEPRECATED
 ###
 
-from django.core.management.base import BaseCommand
-from modules.translator import Translator
-from modules.config import config
-
 import json
 import os
-
-from tqdm import tqdm
 from pprint import pprint
 
-from sunless_web.models import EntityCate, Entity, Noun, NounCate
+from django.core.management.base import BaseCommand
+from tqdm import tqdm
 
+from modules.config import config
+from modules.translator import Translator
+from sunless_web.models import EntityCate, Entity, Noun, NounCate
 
 SHEET_DOWNLOAD_PATH = "data/sheets"
 SHEETS = {

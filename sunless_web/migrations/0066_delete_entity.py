@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0065_auto_20190119_1939'),
     ]

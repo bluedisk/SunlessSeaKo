@@ -42,4 +42,3 @@ class TranslateTextarea(ElasticTextarea):
             default_attrs.update(attrs)
 
         super(TranslateTextarea, self).__init__(default_attrs)
-

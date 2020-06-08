@@ -2,11 +2,11 @@ import telegram
 
 
 class TelegramLog:
-    
+
     def __init__(self, token, group_id):
-        self.bot = telegram.Bot(token = token) 
+        self.bot = telegram.Bot(token=token)
         self.group = group_id
-        
+
     def log(self, text):
         self.bot.send_message(self.group, text)
 
@@ -15,9 +15,9 @@ class TelegramLog:
 
 
 class PrintLog:
-    
+
     def __init__(self):
         pass
-        
+
     def log(self, text):
         print(text)

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('sunless_web', '0062_auto_20190113_2004'),
     ]
@@ -18,11 +17,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='entry',
             name='status',
-            field=models.CharField(choices=[('none', '안됨'), ('finished', '완료')], default='none', max_length=10, verbose_name='번역 상태'),
+            field=models.CharField(choices=[('none', '안됨'), ('finished', '완료')], default='none', max_length=10,
+                                   verbose_name='번역 상태'),
         ),
         migrations.AlterField(
             model_name='entrypath',
             name='status',
-            field=models.CharField(choices=[('none', '안됨'), ('partial', '부분번역'), ('finished', '완료')], default='none', max_length=10, verbose_name='번역 상태'),
+            field=models.CharField(choices=[('none', '안됨'), ('partial', '부분번역'), ('finished', '완료')], default='none',
+                                   max_length=10, verbose_name='번역 상태'),
         ),
     ]

@@ -1,22 +1,22 @@
 /* Styles for the demo */
 
 textarea.form-control {
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  border-bottom: 1px solid black;
-  padding: 5px 0px;
-  min-height: 20px;
-  outline: none;
-  resize: none;
-  background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: 1px solid black;
+    padding: 5px 0px;
+    min-height: 20px;
+    outline: none;
+    resize: none;
+    background: transparent;
 }
 
 textarea.form-control:focus {
-  box-shadow: none;
+    box-shadow: none;
 }
 
 textarea:disabled.form-control {
-  background: transparent;
-  border-bottom: 1px dashed black;
+    background: transparent;
+    border-bottom: 1px dashed black;
 }

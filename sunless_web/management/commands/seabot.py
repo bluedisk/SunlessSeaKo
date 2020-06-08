@@ -1,22 +1,19 @@
+import logging
 import random
+import re
 
-from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand
-from django.db.models import Q
-
-from modules.config import config
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
+from django.core.management.base import BaseCommand
 from django.core.validators import validate_email, validate_slug
-
+from django.db.models import Q
 from telegram import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
-from telegram.ext import Updater, CommandHandler
 from telegram.ext import MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler
 
+from modules.config import config
 from sunless_web.models import Conversation, TelegramUser
-
-import logging
-import re
 
 logging.basicConfig(format='%(asctime)-15s %(message)s', filename='sebot.log')
 
@@ -114,7 +111,7 @@ class SeaBot:
             progress['phase'] = next_phase
 
     def hello(self, _, progress):
-        tglogger.debug(f"Finding user {progress['firstname']} / {progress['lastname'] } ( {progress['username']}: "
+        tglogger.debug(f"Finding user {progress['firstname']} / {progress['lastname']} ( {progress['username']}: "
                        f"{progress['telegram_id']} )")
 
         try:
