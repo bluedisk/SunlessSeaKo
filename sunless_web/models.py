@@ -192,7 +192,7 @@ class EntryPath(models.Model):
         elif 'finished' not in children_status and self.status != 'none':
             self.status = 'none'
 
-        elif self.status != 'partial':
+        elif 'none' in children_status and 'finished' in children_status and self.status != 'partial':
             self.status = 'partial'
 
         else:
@@ -318,10 +318,11 @@ class Entry(models.Model):
 
     def update_status(self):
         """ 번역 상태 업데이트 """
-        if self.translations.exists() and self.status != 'finished':
+        transed = self.translations.exists()
+        if transed and self.status != 'finished':
             self.status = 'finished'
 
-        elif self.status != 'none':
+        elif not transed and self.status != 'none':
             self.status = 'none'
 
         else:
